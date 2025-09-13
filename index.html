@@ -240,70 +240,70 @@ document.addEventListener('DOMContentLoaded', () => {
     addIngredientRow();
   });
 
-  document.getElementById('recipeForm').addEventListener('submit', async e => {
-    e.preventDefault();
-    const title = document.getElementById('title').value.trim();
-    const steps = document.getElementById('steps').value.trim();
-    if (!title || !steps) {
-      alert('請完整填寫食譜名稱及做法');
-      return;
-    }
-    const rows = document.getElementById('ingredientsContainer').children;
-    const ingredients = [];
-    let flourExists = false;
-    for (const row of rows) {
-      const select = row.children[0];
-      const otherText = row.children[1];
-      const weightInput = row.children[2];
-      const percentInput = row.children[3];
-      const descInput = row.children[4];
-
-      let name = select.value === '其他' ? otherText.value.trim() : select.value;
-      if (!name) {
-        alert('請完整填寫所有食材名稱');
-        return;
-      }
-      const weight = parseFloat(weightInput.value);
-      if (isNaN(weight) || weight <= 0) {
-        alert('請輸入有效的重量數字');
-        return;
-      }
-      if (name === '麵粉') flourExists = true;
-
-      ingredients.push({
-        name,
-        weight,
-        percent: percentInput.value,
-        desc: descInput.value.trim()
-      });
-    }
-
-    if (!flourExists) {
-      alert('食材中必須包含麵粉，以便計算百分比');
-      return;
-    }
-
-    try {
-      const res = await fetch(WEBAPP_URL + '?action=addRecipe', {
-        method: 'POST',
-        body: JSON.stringify({title, ingredients, steps}),
-        headers: {'Content-Type': 'application/json'}
-      });
-      const result = await res.json();
-      if (result.status === 'success') {
-        alert('食譜新增成功');
-        document.getElementById('recipeForm').reset();
-        document.getElementById('ingredientsContainer').innerHTML = '';
-        addIngredientRow();
-        displayRecipes();
-  } else {
-    alert('新增失敗，伺服器回傳錯誤');
+document.getElementById('recipeForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const title = document.getElementById('title').value.trim();
+  const steps = document.getElementById('steps').value.trim();
+  if (!title || !steps) {
+    alert('請完整填寫食譜名稱及做法');
+    return;
   }
-} catch(err) {
-  console.error('新增食譜錯誤', err);
-  alert('新增失敗，請檢查網路或稍後再試');
-}
+  const rows = document.getElementById('ingredientsContainer').children;
+  const ingredients = [];
+  let flourExists = false;
+  for (const row of rows) {
+    const select = row.children[0];
+    const otherText = row.children[1];
+    const weightInput = row.children[2];
+    const percentInput = row.children[3];
+    const descInput = row.children[4];
 
+    let name = select.value === '其他' ? otherText.value.trim() : select.value;
+    if (!name) {
+      alert('請完整填寫所有食材名稱');
+      return;
+    }
+    const weight = parseFloat(weightInput.value);
+    if (isNaN(weight) || weight <= 0) {
+      alert('請輸入有效的重量數字');
+      return;
+    }
+    if (name === '麵粉') flourExists = true;
+
+    ingredients.push({
+      name,
+      weight,
+      percent: percentInput.value,
+      desc: descInput.value.trim()
+    });
+  }
+
+  if (!flourExists) {
+    alert('食材中必須包含麵粉，以便計算百分比');
+    return;
+  }
+
+  try {
+    const res = await fetch(WEBAPP_URL + '?action=addRecipe', {
+      method: 'POST',
+      body: JSON.stringify({title, ingredients, steps}),
+      headers: {'Content-Type': 'application/json'}
+    });
+    const result = await res.json();
+    if (result.status === 'success') {
+      alert('食譜新增成功');
+      document.getElementById('recipeForm').reset();
+      document.getElementById('ingredientsContainer').innerHTML = '';
+      addIngredientRow();
+      displayRecipes();
+    } else {
+      alert('新增失敗，伺服器回傳錯誤');
+    }
+  } catch(err) {
+    console.error('新增食譜錯誤', err);
+    alert('新增失敗，請檢查網路或稍後再試');
+  }
+});
 
   // 初始化
   addIngredientRow();
