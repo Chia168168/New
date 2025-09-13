@@ -195,10 +195,258 @@
 
 </head>
 <body>
-<div class="container">
-  <!-- 同先前完整HTML結構 -->
-  <!-- 依之前貼文內容放入，請參考完整頂層結構和內容 -->
-</div>
+    <div class="container">
+        <h1>TENG 圖片處理工具 <span class="version">v3.0</span></h1>
+        
+        <div class="section">
+            <label>處理模式</label>
+            <div class="mode-buttons">
+                <button class="mode-button active" data-mode="resize" onclick="switchMode('resize')">尺寸調整/格式轉換</button>
+                <button class="mode-button" data-mode="crop" onclick="switchMode('crop')">圖片裁切</button>
+                <button class="mode-button" data-mode="base64" onclick="switchMode('base64')">Base64互轉</button>
+            </div>
+        </div>
+        
+        <div class="section file-button-container">
+            <div id="imageFileInputContainer">
+                <label>圖片檔案</label>
+                <button class="file-button" onclick="triggerFileInput('imageInput')">選擇圖片</button>
+                <input type="file" id="imageInput" accept="image/*,.heic,.heif" multiple class="hidden">
+                <div class="help-text">支援 JPEG, PNG, HEIC, HEIF</div>
+            </div>
+            <div id="imageFolderInputContainer">
+                <label>圖片資料夾</label>
+                <button class="file-button" onclick="triggerFileInput('imageFolderInput')">選擇資料夾</button>
+                <input type="file" id="imageFolderInput" webkitdirectory accept="image/*,.heic,.heif" class="hidden">
+                <div class="help-text">僅支援 Chrome, Edge, Safari</div>
+            </div>
+            <div id="base64FileInputContainer" class="mode-specific" data-mode="base64">
+                <label>Base64 檔案</label>
+                <button class="file-button" onclick="triggerFileInput('base64FileInput')">選擇檔案</button>
+                <input type="file" id="base64FileInput" accept=".txt" multiple class="hidden">
+                <div class="help-text">支援 .txt 檔案</div>
+            </div>
+            <div id="base64FolderInputContainer" class="mode-specific" data-mode="base64">
+                <label>Base64 資料夾</label>
+                <button class="file-button" onclick="triggerFileInput('base64FolderInput')">選擇資料夾</button>
+                <input type="file" id="base64FolderInput" webkitdirectory class="hidden">
+                <div class="help-text">僅支援 Chrome, Edge, Safari</div>
+            </div>
+            <div>
+                <label>清空</label>
+                <button class="clear-button" onclick="clearFiles()">清空檔案</button>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h3 style="margin: 0; font-size: 16px; color: #0033A0;">縮圖預覽</h3>
+            <div id="previewContainer" class="thumbnail-container"></div>
+        </div>
+        
+        <div class="section">
+            <h3 id="fileListHeader" style="margin: 0; font-size: 16px; color: #0033A0;">
+                <span class="status-indicator status-ready"></span>已選擇的檔案：<span id="fileCount">0</span> 張
+            </h3>
+            <div id="fileList"></div>
+        </div>
+
+        <div id="cropSection" class="section mode-specific" data-mode="crop">
+            <h3 style="margin: 0; font-size: 16px; color: #0033A0;">裁切圖片</h3>
+            <div id="cropContainer" class="crop-container">
+                <img id="cropImage" style="max-width: 100%;" class="hidden">
+            </div>
+            <div class="file-button-container">
+                <button class="process-button" id="applyCropBtn" onclick="applyCropping()" disabled>.   應 用 裁 切   .</button>
+                <button class="process-button" id="resetCropBtn" onclick="resetCropping()" disabled>.   重 置 裁 切   .</button>
+            </div>
+
+            <div class="control-group">
+                <div class="control-row">
+                    <label>裁切比例</label>
+                    <div class="ratio-buttons">
+                        <button class="ratio-button active" data-value="1/1" onclick="setRatio('1/1')">1:1 (正方形)</button>
+                        <button class="ratio-button" data-value="NaN" onclick="setRatio('NaN')">自訂比例</button>
+                        <button class="ratio-button" data-value="16/9" onclick="setRatio('16/9')">16:9 (橫幅)</button>
+                        <button class="ratio-button" data-value="9/16" onclick="setRatio('9/16')">9:16 (直幅)</button>
+                        <button class="ratio-button" data-value="4/3" onclick="setRatio('4/3')">4:3 (標準)</button>
+                        <button class="ratio-button" data-value="3/4" onclick="setRatio('3/4')">3:4 (肖像)</button>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <label>輸出寬度 (px)</label>
+                    <div id="cropWidthButtons" class="crop-size-buttons" data-type="width">
+                        <button class="crop-size-button" data-value="1920" onclick="setCropDimension('width', 1920)">1920</button>
+                        <button class="crop-size-button" data-value="1280" onclick="setCropDimension('width', 1280)">1280</button>
+                        <button class="crop-size-button active" data-value="1024" onclick="setCropDimension('width', 1024)">1024</button>
+                        <button class="crop-size-button" data-value="720" onclick="setCropDimension('width', 720)">720</button>
+                        <button class="crop-size-button" data-value="512" onclick="setCropDimension('width', 512)">512</button>
+                        <button class="crop-size-button" data-value="256" onclick="setCropDimension('width', 256)">256</button>
+                        <button class="crop-size-button" data-value="custom" onclick="setCropDimension('width', 'custom')">自訂</button>
+                    </div>
+                    <input type="number" id="cropWidthInput" value="1024" min="1" class="hidden">
+                </div>
+                <div class="control-row">
+                    <label>輸出高度 (px)</label>
+                    <div id="cropHeightButtons" class="crop-size-buttons" data-type="height">
+                        <button class="crop-size-button" data-value="1920" onclick="setCropDimension('height', 1920)">1920</button>
+                        <button class="crop-size-button" data-value="1280" onclick="setCropDimension('height', 1280)">1280</button>
+                        <button class="crop-size-button active" data-value="1024" onclick="setCropDimension('height', 1024)">1024</button>
+                        <button class="crop-size-button" data-value="720" onclick="setCropDimension('height', 720)">720</button>
+                        <button class="crop-size-button" data-value="512" onclick="setCropDimension('height', 512)">512</button>
+                        <button class="crop-size-button" data-value="256" onclick="setCropDimension('height', 256)">256</button>
+                        <button class="crop-size-button" data-value="custom" onclick="setCropDimension('height', 'custom')">自訂</button>
+                    </div>
+                    <input type="number" id="cropHeightInput" value="1024" min="1" class="hidden">
+                </div>
+                <div class="control-row">
+                    <label>預計輸出尺寸</label>
+                    <span id="croppedDimensionsDisplay" style="font-weight: bold; color: var(--primary-color);">1024 x 1024 px</span>
+                </div>
+                <div class="control-row">
+                    <label>輸出格式</label>
+                    <div class="format-buttons">
+                        <button class="format-button active" data-value="image/jpeg" onclick="setCropFormat('image/jpeg')">JPEG</button>
+                        <button class="format-button" data-value="image/png" onclick="setCropFormat('image/png')">PNG</button>
+                        <button class="format-button" data-value="image/webp" onclick="setCropFormat('image/webp')">WebP</button>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <label>輸出品質</label>
+                    <div class="quality-buttons">
+                        <button class="quality-button active" data-value="1.0" onclick="setCropQuality('1.0')">100%</button>
+                        <button class="quality-button" data-value="0.95" onclick="setCropQuality('0.95')">95%</button>
+                        <button class="quality-button" data-value="0.9" onclick="setCropQuality('0.9')">90%</button>
+                        <button class="quality-button" data-value="0.85" onclick="setCropQuality('0.85')">85%</button>
+                        <button class="quality-button" data-value="0.8" onclick="setCropQuality('0.8')">80%</button>
+                        <button class="quality-button" data-value="0.7" onclick="setCropQuality('0.7')">70%</button>
+                    </div>
+                </div>
+            </div>
+
+            <img id="resultPreview" src="" alt="裁切結果" class="hidden">
+        </div>
+        
+        <div id="resizeOptions" class="section mode-specific controls" data-mode="resize">
+            <div>
+                <label>尺寸設定</label>
+                <div class="dimension-buttons">
+                    <button class="dimension-button active" data-mode="width" onclick="switchDimensionMode('width')">固定寬度</button>
+                    <button class="dimension-button" data-mode="height" onclick="switchDimensionMode('height')">固定高度</button>
+                    <button class="dimension-button" data-mode="both" onclick="switchDimensionMode('both')">寬度與高度</button>
+                </div>
+            </div>
+            <div id="widthContainer">
+                <label>寬度 (px)</label>
+                <div class="size-buttons">
+                    <button class="size-button" data-value="1920" onclick="setSize('width', '1920')">1920</button>
+                    <button class="size-button" data-value="1280" onclick="setSize('width', '1280')">1280</button>
+                    <button class="size-button active" data-value="1024" onclick="setSize('width', '1024')">1024</button>
+                    <button class="size-button" data-value="720" onclick="setSize('width', '720')">720</button>
+                    <button class="size-button" data-value="512" onclick="setSize('width', '512')">512</button>
+                    <button class="size-button" data-value="256" onclick="setSize('width', '256')">256</button>
+                    <button class="size-button" data-value="custom" onclick="setSize('width', 'custom')">自訂</button>
+                </div>
+                <input type="number" id="widthInput" min="1" class="hidden" placeholder="輸入寬度">
+            </div>
+            <div id="heightContainer">
+                <label>高度 (px)</label>
+                <div class="size-buttons">
+                    <button class="size-button" data-value="1920" onclick="setSize('height', '1920')">1920</button>
+                    <button class="size-button" data-value="1280" onclick="setSize('height', '1280')">1280</button>
+                    <button class="size-button active" data-value="1024" onclick="setSize('height', '1024')">1024</button>
+                    <button class="size-button" data-value="720" onclick="setSize('height', '720')">720</button>
+                    <button class="size-button" data-value="512" onclick="setSize('height', '512')">512</button>
+                    <button class="size-button" data-value="256" onclick="setSize('height', '256')">256</button>
+                    <button class="size-button" data-value="custom" onclick="setSize('height', 'custom')">自訂</button>
+                </div>
+                <input type="number" id="heightInput" min="1" class="hidden" placeholder="輸入高度">
+            </div>
+            <!-- 新增: 顯示預計輸出尺寸 -->
+            <div class="output-dimension">
+                預計輸出尺寸(第一張圖片): <span id="outputDimensions">1024x768 px</span>
+            </div>
+            <div>
+                <label>保持比例</label>
+                <input type="checkbox" id="aspectRatio" checked onchange="updateDimensions()">
+            </div>
+            <div id="qualityContainer">
+                <label>品質</label>
+                <div class="quality-buttons">
+                    <button class="quality-button active" data-value="1.0" onclick="setQuality('1.0')">100%</button>
+                    <button class="quality-button" data-value="0.95" onclick="setQuality('0.95')">95%</button>
+                    <button class="quality-button" data-value="0.9" onclick="setQuality('0.9')">90%</button>
+                    <button class="quality-button" data-value="0.85" onclick="setQuality('0.85')">85%</button>
+                    <button class="quality-button" data-value="0.80" onclick="setQuality('0.80')">80%</button>
+                    <button class="quality-button" data-value="0.7" onclick="setQuality('0.7')">70%</button>
+                    <button class="quality-button" data-value="custom" onclick="setQuality('custom')">自訂</button>
+                </div>
+                <input type="number" id="qualityInput" min="0" max="100" class="hidden" placeholder="0-100">
+            </div>
+        </div>
+        
+        <div id="base64InputSection" class="section mode-specific" data-mode="base64">
+            <label>Base64 字串</label>
+            <textarea id="base64Text" placeholder="輸入 Base64 字串（例如 data:image/jpeg;base64,...）"></textarea>
+        </div>
+        
+        <div class="section">
+            <label>輸出格式</label>
+            <div class="format-buttons">
+                <button class="format-button active" data-value="image/jpeg" onclick="setFormat('image/jpeg')">JPEG</button>
+                <button class="format-button" data-value="image/png" onclick="setFormat('image/png')">PNG</button>
+                <button class="format-button" data-value="image/webp" onclick="setFormat('image/webp')">WebP</button>
+            </div>
+        </div>
+        
+        <div class="performance-note">
+            <strong>效能提示：</strong> 處理大量圖片時，系統會自動分批處理以避免瀏覽器卡頓。處理過程中請勿關閉頁面。
+        </div>
+        
+        <div class="section">
+            <div class="file-button-container" id="processButtonsContainer">
+                <button id="resizeButton" class="process-button mode-specific" data-mode="resize" onclick="processResize()">開始執行 調整尺寸與轉換格式</button>
+                <button id="toBase64Button" class="process-button mode-specific" data-mode="base64" onclick="processImageToBase64()">圖片轉 Base64</button>
+                <button id="fromBase64Button" class="process-button mode-specific" data-mode="base64" onclick="processBase64ToImage()">Base64 轉圖片</button>
+            </div>
+        </div>
+        
+        <div class="section progress-container" id="progressContainer">
+            <div class="progress-header">
+                <span id="progressTitle">處理進度</span>
+                <span id="progressPercentage">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">等待中...</div>
+            
+            <div class="sub-progress">
+                <div class="progress-header">
+                    <span>當前檔案處理進度</span>
+                    <span id="subProgressPercentage">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="subProgressFill" style="background-color: #4CAF50;"></div>
+                </div>
+                <div class="progress-text" id="subProgressText">等待中...</div>
+            </div>
+            
+            <div id="timeRemaining" class="progress-text"></div>
+        </div>
+        
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+        
+        <div class="section">
+            <button id="downloadButton">下載結果</button>
+        </div>
+        
+        <div class="tooltip">
+            <span style="font-size: 12px; color: #005B99;">使用說明</span>
+            <span class="tooltip-text">支援圖片尺寸調整、格式轉換（尺寸調整預設 JPEG，Base64 模式預設 PNG，品質 90%）及 Base64 互轉。HEIC/HEIF 支援，多檔案打包為 ZIP。請勿分享敏感 Base64 字串。資料夾選擇僅支援 Chrome、Edge 和 Safari。</span>
+        </div>
+    </div>
+
 
 <script>
 
