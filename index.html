@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>食譜記錄程式</title>
+<title>食譜記錄程式 - 百分比計算</title>
 <style>
   body {
     font-family: "微軟正黑體", "Microsoft JhengHei", Arial, sans-serif;
-    max-width: 600px;
+    max-width: 700px;
     margin: 20px auto;
     background: #fff8f0;
     color: #333;
@@ -15,31 +15,32 @@
     border-radius: 8px;
     box-shadow: 0 0 8px #ccc;
   }
-  h1 {
+  h1, h2 {
     text-align: center;
     color: #d2691e;
   }
   label {
     display: block;
-    margin: 15px 0 5px;
+    margin: 10px 0 5px;
     font-weight: bold;
   }
-  input[type=text], textarea {
+  input[type=text], input[type=number], select, textarea {
     width: 100%;
-    padding: 8px;
+    padding: 6px 8px;
     border: 2px solid #d2691e;
     border-radius: 4px;
     font-size: 1rem;
+    box-sizing: border-box;
   }
   textarea {
     resize: vertical;
-    height: 100px;
+    height: 90px;
   }
   button {
     background-color: #d2691e;
     color: white;
     border: none;
-    padding: 10px 15px;
+    padding: 10px 20px;
     font-size: 1rem;
     border-radius: 5px;
     cursor: pointer;
@@ -49,20 +50,56 @@
     background-color: #a0522d;
   }
   .recipe-list {
-    margin-top: 30px;
+    margin-top: 40px;
   }
   .recipe-item {
     border-bottom: 1px solid #d2691e;
-    padding: 10px 0;
+    padding: 15px 0;
   }
   .recipe-title {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     font-weight: bold;
     color: #a0522d;
   }
+  .recipe-subtitle {
+    font-weight: bold;
+    margin-top: 10px;
+    color: #8b4513;
+  }
   .recipe-content {
     white-space: pre-wrap;
-    margin-top: 5px;
+    margin-top: 6px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  table, th, td {
+    border: 1px solid #d2691e;
+  }
+  th, td {
+    padding: 6px 8px;
+    text-align: left;
+  }
+  th {
+    background-color: #f3d6b4;
+  }
+  .inline-flex {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .inline-flex > * {
+    flex: 1;
+  }
+  .button-small {
+    flex: 0 0 auto;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+  small {
+    color: #555;
   }
 </style>
 </head>
@@ -72,10 +109,15 @@
   <label for="title">食譜名稱</label>
   <input type="text" id="title" placeholder="請輸入食譜名稱" required />
 
-  <label for="ingredients">食材（每行一項）</label>
-  <textarea id="ingredients" placeholder="請輸入食材，每行一項" required></textarea>
-
-  <label for="steps">做法步驟</label>
+  <fieldset style="margin-top: 20px; border: 1px solid #d2691e; padding: 10px; border-radius: 5px;">
+    <legend style="font-weight: bold; color: #d2691e;">食材明細（重量以克為單位，百分比以麵粉重量為母數）</legend>
+    <div id="ingredientsContainer">
+      <!-- 食材列由JS新增 -->
+    </div>
+    <button type="button" id="addIngredientBtn" style="margin-top: 10px;">新增食材</button>
+  </fieldset>
+  
+  <label for="steps" style="margin-top: 20px;">做法步驟</label>
   <textarea id="steps" placeholder="請輸入做法步驟" required></textarea>
 
   <button type="submit">新增食譜</button>
@@ -86,63 +128,258 @@
 </section>
 
 <script>
-  // 讀取本地儲存食譜
-  function loadRecipes() {
-    const recipes = JSON.parse(localStorage.getItem('recipes') || '[]');
-    return recipes;
+  const ingredientOptions = [
+    "麵粉", "水", "糖", "酵母", "牛奶", "奶粉", "煉乳",
+    "雞蛋", "優格", "其他"
+  ];
+
+  // 建立一筆食材輸入列
+  function createIngredientRow() {
+    const row = document.createElement('div');
+    row.className = 'inline-flex';
+    row.style.marginBottom = '8px';
+
+    const select = document.createElement('select');
+    select.required = true;
+    ingredientOptions.forEach(opt => {
+      const option = document.createElement('option');
+      option.value = opt;
+      option.textContent = opt;
+      select.appendChild(option);
+    });
+
+    // 文字輸入欄，用於"其他"時可自行輸入食材名稱
+    const otherText = document.createElement('input');
+    otherText.type = 'text';
+    otherText.placeholder = '其他食材名稱';
+    otherText.style.display = 'none';
+
+    select.addEventListener('change', () => {
+      if (select.value === '其他') {
+        otherText.style.display = 'block';
+        otherText.required = true;
+      } else {
+        otherText.style.display = 'none';
+        otherText.required = false;
+        otherText.value = '';
+      }
+    });
+
+    const weightInput = document.createElement('input');
+    weightInput.type = 'number';
+    weightInput.min = '0';
+    weightInput.step = 'any';
+    weightInput.placeholder = '重量 (克)';
+    weightInput.required = true;
+
+    const percentInput = document.createElement('input');
+    percentInput.type = 'text';
+    percentInput.placeholder = '百分比';
+    percentInput.readOnly = true;
+    percentInput.style.backgroundColor = '#f0f0f0';
+
+    const descInput = document.createElement('input');
+    descInput.type = 'text';
+    descInput.placeholder = '說明 (可選)';
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.textContent = '刪除';
+    removeBtn.className = 'button-small';
+    removeBtn.style.backgroundColor = '#a0522d';
+    removeBtn.style.color = '#fff';
+    removeBtn.style.border = 'none';
+    removeBtn.style.borderRadius = '3px';
+    removeBtn.style.cursor = 'pointer';
+
+    removeBtn.onclick = () => {
+      row.remove();
+      calculatePercentages();
+    };
+
+    // 當重量改變時，重新計算百分比
+    weightInput.addEventListener('input', calculatePercentages);
+
+    row.appendChild(select);
+    row.appendChild(otherText);
+    row.appendChild(weightInput);
+    row.appendChild(percentInput);
+    row.appendChild(descInput);
+    row.appendChild(removeBtn);
+
+    return row;
   }
 
-  // 儲存食譜至本地儲存
+  // 在容器新增一列食材
+  function addIngredientRow() {
+    const container = document.getElementById('ingredientsContainer');
+    const row = createIngredientRow();
+    container.appendChild(row);
+  }
+
+  // 計算百分比（以麵粉重量為基準）
+  function calculatePercentages() {
+    const container = document.getElementById('ingredientsContainer');
+    const rows = container.children;
+    let flourWeight = 0;
+    // 先找出麵粉重量
+    for (let row of rows) {
+      const select = row.children[0];
+      const otherText = row.children[1];
+      const weightInput = row.children[2];
+      let ingredientName = select.value;
+      if (ingredientName === '其他' && otherText.value.trim()) {
+        ingredientName = otherText.value.trim();
+      }
+      if (ingredientName === '麵粉') {
+        const w = parseFloat(weightInput.value);
+        if (!isNaN(w)) {
+          flourWeight += w;
+        }
+      }
+    }
+    // 計算百分比並更新欄位
+    for (let row of rows) {
+      const select = row.children[0];
+      const otherText = row.children[1];
+      const weightInput = row.children[2];
+      const percentInput = row.children[3];
+      let ingredientName = select.value;
+      if (ingredientName === '其他' && otherText.value.trim()) {
+        ingredientName = otherText.value.trim();
+      }
+      const w = parseFloat(weightInput.value);
+      if (isNaN(w) || flourWeight === 0) {
+        percentInput.value = '';
+      } else if (ingredientName === '麵粉') {
+        percentInput.value = '100%';
+      } else {
+        const percent = (w / flourWeight) * 100;
+        percentInput.value = percent > 0 ? percent.toFixed(2) + '%' : '';
+      }
+    }
+  }
+
+  // 載入食譜列表
+  function loadRecipes() {
+    return JSON.parse(localStorage.getItem('recipes') || '[]');
+  }
+
+  // 儲存食譜列表
   function saveRecipes(recipes) {
     localStorage.setItem('recipes', JSON.stringify(recipes));
   }
 
-  // 顯示食譜列表
+  // 顯示食譜
   function displayRecipes() {
-    const recipeList = document.getElementById('recipeList');
+    const listEl = document.getElementById('recipeList');
     const recipes = loadRecipes();
-    // 清空現有清單
-    recipeList.innerHTML = '<h2>已記錄的食譜</h2>';
-
+    listEl.innerHTML = `<h2>已記錄的食譜</h2>`;
     if (recipes.length === 0) {
-      recipeList.insertAdjacentHTML('beforeend', '<p>暫時沒有食譜，請新增一個！</p>');
+      listEl.insertAdjacentHTML('beforeend', '<p>暫時沒有食譜，請新增一個！</p>');
       return;
     }
-
-    recipes.forEach((recipe) => {
-      const itemHtml = `
+    recipes.forEach(recipe => {
+      let ingredientRows = '';
+      recipe.ingredients.forEach(ing => {
+        const percentText = ing.percent ? ing.percent : '';
+        const descText = ing.desc ? `（說明: ${ing.desc}）` : '';
+        ingredientRows += `<tr>
+          <td>${ing.name}</td>
+          <td>${ing.weight} 克</td>
+          <td>${percentText}</td>
+          <td>${descText}</td>
+        </tr>`;
+      });
+      const recipeHtml = `
       <div class="recipe-item">
         <div class="recipe-title">${recipe.title}</div>
-        <div><strong>食材:</strong></div>
-        <div class="recipe-content">${recipe.ingredients.replace(/\n/g, '<br>')}</div>
-        <div><strong>做法:</strong></div>
+        <div class="recipe-subtitle">食材明細</div>
+        <table>
+          <thead>
+            <tr>
+              <th>食材</th><th>重量</th><th>百分比</th><th>說明</th>
+            </tr>
+          </thead>
+          <tbody>${ingredientRows}</tbody>
+        </table>
+        <div class="recipe-subtitle">做法</div>
         <div class="recipe-content">${recipe.steps.replace(/\n/g, '<br>')}</div>
       </div>`;
-      recipeList.insertAdjacentHTML('beforeend', itemHtml);
+      listEl.insertAdjacentHTML('beforeend', recipeHtml);
     });
   }
 
-  // 表單送出事件處理
-  document.getElementById('recipeForm').addEventListener('submit', function(e){
+  // 初始化新增一列食材
+  addIngredientRow();
+
+  document.getElementById('addIngredientBtn').addEventListener('click', () => {
+    addIngredientRow();
+  });
+
+  // 表單提交
+  document.getElementById('recipeForm').addEventListener('submit', e => {
     e.preventDefault();
     const title = document.getElementById('title').value.trim();
-    const ingredients = document.getElementById('ingredients').value.trim();
     const steps = document.getElementById('steps').value.trim();
-
-    if (!title || !ingredients || !steps) {
-      alert('請完整填寫所有欄位');
+    if (!title) {
+      alert('請輸入食譜名稱');
       return;
     }
+    if (!steps) {
+      alert('請輸入做法步驟');
+      return;
+    }
+    const container = document.getElementById('ingredientsContainer');
+    const rows = container.children;
+    let ingredients = [];
+    let flourWeightExists = false;
+    for (let row of rows) {
+      const select = row.children[0];
+      const otherText = row.children[1];
+      const weightInput = row.children[2];
+      const percentInput = row.children[3];
+      const descInput = row.children[4];
 
+      let name = select.value === '其他' ? otherText.value.trim() : select.value;
+      if (!name) {
+        alert('請完整輸入所有食材名稱');
+        return;
+      }
+      const weight = parseFloat(weightInput.value);
+      if (isNaN(weight) || weight <= 0) {
+        alert('請輸入有效的重量');
+        return;
+      }
+      if (name === '麵粉') {
+        flourWeightExists = true;
+      }
+      ingredients.push({
+        name,
+        weight,
+        percent: percentInput.value,
+        desc: descInput.value.trim()
+      });
+    }
+    if (!flourWeightExists) {
+      alert('請至少輸入一筆麵粉，才能計算百分比');
+      return;
+    }
+    // 儲存食譜
     const recipes = loadRecipes();
     recipes.push({title, ingredients, steps});
     saveRecipes(recipes);
-
-    this.reset();
+    alert('食譜已新增');
+    // 清空表單
+    document.getElementById('recipeForm').reset();
+    document.getElementById('ingredientsContainer').innerHTML = '';
+    addIngredientRow();
     displayRecipes();
   });
 
-  // 首次載入顯示
+  // 當重量輸入變動時重新計算百分比
+  // 在新增食材列後，會自動為這些列註冊 input 事件
+
   displayRecipes();
 </script>
 </body>
