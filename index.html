@@ -296,14 +296,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('ingredientsContainer').innerHTML = '';
         addIngredientRow();
         displayRecipes();
-      } else {
-        alert('新增失敗，請稍後再試');
-      }
-    } catch (error) {
-      alert('新增失敗，請確認網路或服務狀態');
-      console.error(error);
-    }
-  });
+  } else {
+    alert('新增失敗，伺服器回傳錯誤');
+  }
+} catch(err) {
+  console.error('新增食譜錯誤', err);
+  alert('新增失敗，請檢查網路或稍後再試');
+}
+
 
   // 初始化
   addIngredientRow();
