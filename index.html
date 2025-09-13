@@ -267,62 +267,220 @@
         </header>
         
         <div class="content">
-            <div class="instructions">
-                <h2>如何使用本系統</h2>
-                <ol>
-                    <li>在下方表單中填寫食譜名稱</li>
-                    <li>添加所有食材，系統會自動計算百分比（以麵粉為100%基準）</li>
-                    <li>輸入詳細的做法步驟</li>
-                    <li>點擊"新增食譜"按鈕保存</li>
-                    <li>您的食譜將會顯示在下方列表中</li>
-                </ol>
-            </div>
-            
-            <div class="section">
-                <h2>新增食譜</h2>
-                
-                <div class="form-group">
-                    <label for="title">食譜名稱</label>
-                    <input type="text" id="title" placeholder="例如：經典牛奶吐司" required>
+            <div class="tab-container">
+                <div class="tabs">
+                    <div class="tab active" data-tab="usage">使用說明</div>
+                    <div class="tab" data-tab="setup">Google Sheets設置</div>
+                    <div class="tab" data-tab="app">食譜管理</div>
                 </div>
                 
-                <div class="form-group">
-                    <label>食材明細（重量單位：克；百分比以麵粉為基數）</label>
-                    <div id="ingredients-container">
-                        <!-- 食材行將通過JavaScript動態添加 -->
+                <div class="tab-content active" id="usage">
+                    <div class="instructions">
+                        <h2>如何使用本系統</h2>
+                        <ol>
+                            <li>首先按照"Google Sheets設置"選項卡中的說明設置您的Google Sheets和Apps Script</li>
+                            <li>在"食譜管理"選項卡中填寫食譜名稱</li>
+                            <li>添加所有食材，系統會自動計算百分比（以麵粉為100%基準）</li>
+                            <li>輸入詳細的做法步驟</li>
+                            <li>點擊"新增食譜"按鈕保存到Google Sheets</li>
+                            <li>您的食譜將會顯示在下方列表中</li>
+                        </ol>
                     </div>
-                    <button type="button" id="add-ingredient" class="secondary">
-                        <i class="fas fa-plus"></i> 新增食材
-                    </button>
                 </div>
                 
-                <div class="form-group">
-                    <label for="steps">做法步驟</label>
-                    <textarea id="steps" placeholder="請詳細描述製作步驟..." required></textarea>
-                </div>
-                
-                <div class="buttons">
-                    <button type="button" id="save-recipe">
-                        <i class="fas fa-save"></i> 新增食譜
-                    </button>
-                    <button type="button" id="reset-form" class="secondary">
-                        <i class="fas fa-redo"></i> 重設表單
-                    </button>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h2>食譜列表</h2>
-                <div id="recipe-list" class="recipe-list">
-                    <!-- 食譜將通過JavaScript動態添加 -->
+                <div class="tab-content" id="setup">
+                    <h2>Google Sheets 設置指南</h2>
+                    
                     <div class="alert">
-                        <i class="fas fa-info-circle"></i> 尚未添加任何食譜，請使用上方表單新增您的第一個食譜。
+                        <i class="fas fa-info-circle"></i> 請按照以下步驟設置您的Google Sheets和Apps Script
+                    </div>
+                    
+                    <h3>步驟 1: 創建Google Sheet</h3>
+                    <ol>
+                        <li>打開 <a href="https://sheets.google.com" target="_blank">Google Sheets</a></li>
+                        <li>創建一個新的空白表格</li>
+                        <li>將表格命名為"食譜管理"</li>
+                        <li>在第一行創建以下列標題：
+                            <ul>
+                                <li>A列: 食譜名稱</li>
+                                <li>B列: 食材名稱</li>
+                                <li>C列: 重量 (克)</li>
+                                <li>D列: 百分比</li>
+                                <li>E列: 說明</li>
+                                <li>F列: 做法步驟</li>
+                                <li>G列: 時間戳記</li>
+                            </ul>
+                        </li>
+                    </ol>
+                    
+                    <h3>步驟 2: 創建Apps Script</h3>
+                    <ol>
+                        <li在Google Sheets中，點擊"擴展功能" > "Apps Script"</li>
+                        <li>將預設的程式碼替換為以下代碼：</li>
+                    </ol>
+                    
+                    <div class="config-panel">
+                        <pre>
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    
+    // 如果是獲取食譜請求
+    if (data.action === "getRecipes") {
+      return getRecipes(sheet);
+    }
+    
+    // 如果是添加食譜請求
+    if (data.action === "addRecipe") {
+      return addRecipe(sheet, data);
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: "未知操作"
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "error",
+    message: "請使用POST請求"
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getRecipes(sheet) {
+  const data = sheet.getDataRange().getValues();
+  const recipes = {};
+  
+  // 跳過標題行
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const title = row[0];
+    
+    if (!recipes[title]) {
+      recipes[title] = {
+        title: title,
+        ingredients: [],
+        steps: row[5] || "",
+        timestamp: row[6] || ""
+      };
+    }
+    
+    recipes[title].ingredients.push({
+      name: row[1] || "",
+      weight: row[2] || 0,
+      percent: row[3] || "",
+      desc: row[4] || ""
+    });
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "success",
+    data: Object.values(recipes)
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function addRecipe(sheet, data) {
+  const timestamp = new Date().toISOString();
+  
+  data.ingredients.forEach(ingredient => {
+    sheet.appendRow([
+      data.title,
+      ingredient.name,
+      ingredient.weight,
+      ingredient.percent,
+      ingredient.desc || "",
+      data.steps,
+      timestamp
+    ]);
+  });
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "success",
+    message: "食譜已添加"
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+                        </pre>
+                    </div>
+                    
+                    <ol start="3">
+                        <li>點擊"保存"按鈕，為項目命名（例如"食譜管理系統"）</li>
+                        <li>點擊"部署" > "新增部署"</li>
+                        <li>選擇"網頁應用程式"</li>
+                        <li>設置執行身份為"我"，權限為"任何人"</li>
+                        <li>點擊"部署"</li>
+                        <li>複製生成的Web App URL</li>
+                        <li>在下面的輸入框中貼上URL：</li>
+                    </ol>
+                    
+                    <div class="form-group">
+                        <label for="webapp-url">Web App URL</label>
+                        <input type="text" id="webapp-url" placeholder="https://script.google.com/macros/s/..." />
+                        <button id="save-url" class="success" style="margin-top: 10px;">
+                            <i class="fas fa-save"></i> 保存URL
+                        </button>
+                    </div>
+                    
+                    <div class="alert success" id="url-saved-message" style="display: none;">
+                        <i class="fas fa-check-circle"></i> URL已保存成功！
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="app">
+                    <h2>食譜管理</h2>
+                    
+                    <div class="form-group">
+                        <label for="title">食譜名稱</label>
+                        <input type="text" id="title" placeholder="例如：經典牛奶吐司" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>食材明細（重量單位：克；百分比以麵粉為基數）</label>
+                        <div id="ingredients-container">
+                            <!-- 食材行將通過JavaScript動態添加 -->
+                        </div>
+                        <button type="button" id="add-ingredient" class="secondary">
+                            <i class="fas fa-plus"></i> 新增食材
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="steps">做法步驟</label>
+                        <textarea id="steps" placeholder="請詳細描述製作步驟..." required></textarea>
+                    </div>
+                    
+                    <div class="buttons">
+                        <button type="button" id="save-recipe">
+                            <i class="fas fa-save"></i> 新增食譜
+                        </button>
+                        <button type="button" id="load-recipes" class="secondary">
+                            <i class="fas fa-sync"></i> 重新載入食譜
+                        </button>
+                        <button type="button" id="reset-form" class="secondary">
+                            <i class="fas fa-redo"></i> 重設表單
+                        </button>
+                    </div>
+                    
+                    <div class="section">
+                        <h2>食譜列表</h2>
+                        <div id="recipe-list" class="recipe-list">
+                            <div class="alert">
+                                <i class="fas fa-info-circle"></i> 尚未添加任何食譜，請使用上方表單新增您的第一個食譜。
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // 食材選項
