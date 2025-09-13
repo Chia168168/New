@@ -76,6 +76,7 @@
 </head>
 <body>
 <h1>Google Sheets 食譜管理系統</h1>
+
 <form id="recipeForm">
   <label for="title">食譜名稱</label>
   <input type="text" id="title" placeholder="請輸入食譜名稱" required />
@@ -97,13 +98,13 @@
 </section>
 
 <script>
+document.addEventListener('DOMContentLoaded', () => {
   const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzuzQTeKQuJ4r-xGonM7Dx8dtwrqqWKVlVqx5d9pwUko0qDrFhzpjIuElWCDvEyI1CM/exec'; // 請換成你的 Apps Script Web App URL
   const ingredientOptions = [
     "麵粉", "水", "糖", "酵母", "牛奶", "奶粉", "煉乳",
     "雞蛋", "優格", "其他"
   ];
 
-  // 新增食材輸入列
   function createIngredientRow() {
     const row = document.createElement('div');
     row.className = 'inline-flex';
@@ -211,13 +212,11 @@
     }
   }
 
-  // 讀取資料
   async function getRecipes() {
     const res = await fetch(WEBAPP_URL + '?action=getRecipes', {method: 'POST'});
     return await res.json();
   }
 
-  // 顯示資料
   async function displayRecipes() {
     const container = document.getElementById('recipeList');
     const recipes = await getRecipes();
@@ -237,7 +236,10 @@
     container.innerHTML = html;
   }
 
-  // 新增食譜
+  document.getElementById('addIngredientBtn').addEventListener('click', () => {
+    addIngredientRow();
+  });
+
   document.getElementById('recipeForm').addEventListener('submit', async e => {
     e.preventDefault();
     const title = document.getElementById('title').value.trim();
@@ -281,26 +283,32 @@
       return;
     }
 
-    // 呼叫 Apps Script 新增
-    const res = await fetch(WEBAPP_URL + '?action=addRecipe', {
-      method: 'POST',
-      body: JSON.stringify({title, ingredients, steps}),
-      headers: {'Content-Type': 'application/json'}
-    });
-    const result = await res.json();
-    if (result.status === 'success') {
-      alert('食譜新增成功');
-      document.getElementById('recipeForm').reset();
-      document.getElementById('ingredientsContainer').innerHTML = '';
-      addIngredientRow();
-      displayRecipes();
-    } else {
-      alert('新增失敗，請稍後再試');
+    try {
+      const res = await fetch(WEBAPP_URL + '?action=addRecipe', {
+        method: 'POST',
+        body: JSON.stringify({title, ingredients, steps}),
+        headers: {'Content-Type': 'application/json'}
+      });
+      const result = await res.json();
+      if (result.status === 'success') {
+        alert('食譜新增成功');
+        document.getElementById('recipeForm').reset();
+        document.getElementById('ingredientsContainer').innerHTML = '';
+        addIngredientRow();
+        displayRecipes();
+      } else {
+        alert('新增失敗，請稍後再試');
+      }
+    } catch (error) {
+      alert('新增失敗，請確認網路或服務狀態');
+      console.error(error);
     }
   });
 
+  // 初始化
   addIngredientRow();
   displayRecipes();
+});
 </script>
 </body>
 </html>
