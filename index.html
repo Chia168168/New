@@ -22,7 +22,7 @@
         }
         
         .container {
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
             background: white;
             border-radius: 12px;
@@ -164,6 +164,14 @@
             background-color: #6b6b6b;
         }
         
+        button.success {
+            background-color: #28a745;
+        }
+        
+        button.success:hover {
+            background-color: #218838;
+        }
+        
         .recipe-list {
             margin-top: 20px;
         }
@@ -243,6 +251,85 @@
             border-left: 4px solid #ffa94d;
         }
         
+        .alert.success {
+            background: #e6fffa;
+            border-left: 4px solid #00b894;
+        }
+        
+        .alert.error {
+            background: #ffe6e6;
+            border-left: 4px solid #ff4757;
+        }
+        
+        .config-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px dashed #adb5bd;
+        }
+        
+        .tab-container {
+            margin-top: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #d2691e;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #f3d6b4;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        
+        .tab.active {
+            background: #d2691e;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background: white;
+            border-radius: 0 0 5px 5px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .webapp-url {
+            font-family: monospace;
+            background: #f1f3f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        
+        .debug-panel {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px dashed #adb5bd;
+            font-family: monospace;
+            font-size: 0.9rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .debug-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
         @media (max-width: 768px) {
             .ingredient-row {
                 flex-direction: column;
@@ -255,6 +342,15 @@
             
             .buttons {
                 flex-direction: column;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                border-radius: 5px;
+                margin-bottom: 5px;
             }
         }
     </style>
@@ -272,6 +368,7 @@
                     <div class="tab active" data-tab="usage">使用說明</div>
                     <div class="tab" data-tab="setup">Google Sheets設置</div>
                     <div class="tab" data-tab="app">食譜管理</div>
+                    <div class="tab" data-tab="debug">除錯資訊</div>
                 </div>
                 
                 <div class="tab-content active" id="usage">
@@ -284,7 +381,18 @@
                             <li>輸入詳細的做法步驟</li>
                             <li>點擊"新增食譜"按鈕保存到Google Sheets</li>
                             <li>您的食譜將會顯示在下方列表中</li>
+                            <li>如果遇到問題，請查看"除錯資訊"選項卡</li>
                         </ol>
+                    </div>
+                    
+                    <div class="alert">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>常見問題解決：</strong>
+                        <ul>
+                            <li>如果"新增食譜"沒有反應，請檢查Web App URL是否正確</li>
+                            <li>確保Google Apps Script已部署為"網頁應用程式"</li>
+                            <li>權限設置應為"任何人"</li>
+                        </ul>
                     </div>
                 </div>
                 
@@ -315,7 +423,7 @@
                     
                     <h3>步驟 2: 創建Apps Script</h3>
                     <ol>
-                        <li在Google Sheets中，點擊"擴展功能" > "Apps Script"</li>
+                        <li>在Google Sheets中，點擊"擴展功能" > "Apps Script"</li>
                         <li>將預設的程式碼替換為以下代碼：</li>
                     </ol>
                     
@@ -432,10 +540,19 @@ function addRecipe(sheet, data) {
                     <div class="alert success" id="url-saved-message" style="display: none;">
                         <i class="fas fa-check-circle"></i> URL已保存成功！
                     </div>
+                    
+                    <div class="alert">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        <strong>重要：</strong> 部署後可能需要幾分鐘時間才能生效。如果遇到權限問題，請確保已正確設置"任何人"權限。
+                    </div>
                 </div>
                 
                 <div class="tab-content" id="app">
                     <h2>食譜管理</h2>
+                    
+                    <div id="connection-status" class="alert" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i> 檢查連接中...
+                    </div>
                     
                     <div class="form-group">
                         <label for="title">食譜名稱</label>
@@ -478,9 +595,38 @@ function addRecipe(sheet, data) {
                         </div>
                     </div>
                 </div>
+                
+                <div class="tab-content" id="debug">
+                    <h2>除錯資訊</h2>
+                    
+                    <div class="alert">
+                        <i class="fas fa-bug"></i> 如果"新增食譜"沒有反應，請檢查以下資訊：
+                    </div>
+                    
+                    <div class="buttons">
+                        <button id="test-connection" class="secondary">
+                            <i class="fas fa-plug"></i> 測試連接
+                        </button>
+                        <button id="view-localstorage" class="secondary">
+                            <i class="fas fa-database"></i> 查看保存的數據
+                        </button>
+                        <button id="clear-data" class="secondary">
+                            <i class="fas fa-trash"></i> 清除本地數據
+                        </button>
+                    </div>
+                    
+                    <div class="debug-panel">
+                        <div class="debug-title">
+                            <h3>日誌資訊</h3>
+                            <button id="clear-log" class="button-small">清除日誌</button>
+                        </div>
+                        <div id="debug-log"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // 食材選項
@@ -489,11 +635,41 @@ function addRecipe(sheet, data) {
                 "雞蛋", "優格", "其他"
             ];
             
-            // 當前食譜數據
-            let recipes = [];
+            // Web App URL
+            let WEBAPP_URL = '';
+            
+            // 除錯日誌
+            const debugLog = document.getElementById('debug-log');
+            
+            // 添加日誌函數
+            function addLog(message, type = 'info') {
+                const logEntry = document.createElement('div');
+                logEntry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+                
+                if (type === 'error') {
+                    logEntry.style.color = '#ff4757';
+                } else if (type === 'success') {
+                    logEntry.style.color = '#00b894';
+                }
+                
+                debugLog.appendChild(logEntry);
+                debugLog.scrollTop = debugLog.scrollHeight;
+            }
             
             // 初始化
             function init() {
+                addLog('系統初始化中...');
+                
+                // 加載保存的Web App URL
+                const savedUrl = localStorage.getItem('webapp_url');
+                if (savedUrl) {
+                    document.getElementById('webapp-url').value = savedUrl;
+                    WEBAPP_URL = savedUrl;
+                    addLog(`已加載保存的Web App URL: ${savedUrl}`);
+                } else {
+                    addLog('未找到保存的Web App URL', 'error');
+                }
+                
                 // 添加第一行食材
                 addIngredientRow();
                 
@@ -501,9 +677,113 @@ function addRecipe(sheet, data) {
                 document.getElementById('add-ingredient').addEventListener('click', addIngredientRow);
                 document.getElementById('save-recipe').addEventListener('click', saveRecipe);
                 document.getElementById('reset-form').addEventListener('click', resetForm);
+                document.getElementById('load-recipes').addEventListener('click', loadRecipes);
+                document.getElementById('save-url').addEventListener('click', saveWebAppUrl);
+                document.getElementById('test-connection').addEventListener('click', testConnection);
+                document.getElementById('view-localstorage').addEventListener('click', viewLocalStorage);
+                document.getElementById('clear-data').addEventListener('click', clearLocalStorage);
+                document.getElementById('clear-log').addEventListener('click', clearLog);
                 
-                // 嘗試從本地存儲加載數據
-                loadRecipesFromLocalStorage();
+                // 標籤切換
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                        
+                        this.classList.add('active');
+                        document.getElementById(this.dataset.tab).classList.add('active');
+                    });
+                });
+                
+                // 嘗試加載食譜
+                if (WEBAPP_URL) {
+                    testConnection();
+                    loadRecipes();
+                }
+                
+                addLog('系統初始化完成');
+            }
+            
+            // 保存Web App URL
+            function saveWebAppUrl() {
+                const url = document.getElementById('webapp-url').value.trim();
+                if (!url) {
+                    alert('請輸入Web App URL');
+                    return;
+                }
+                
+                localStorage.setItem('webapp_url', url);
+                WEBAPP_URL = url;
+                
+                addLog(`Web App URL已保存: ${url}`);
+                
+                // 顯示成功消息
+                const message = document.getElementById('url-saved-message');
+                message.style.display = 'block';
+                setTimeout(() => {
+                    message.style.display = 'none';
+                }, 3000);
+                
+                // 測試連接
+                testConnection();
+            }
+            
+            // 測試連接
+            function testConnection() {
+                if (!WEBAPP_URL) {
+                    addLog('錯誤: 未設置Web App URL', 'error');
+                    showConnectionStatus('error', '未設置Web App URL');
+                    return;
+                }
+                
+                addLog('測試連接到Google Apps Script...');
+                showConnectionStatus('checking', '檢查連接中...');
+                
+                fetch(WEBAPP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'getRecipes'
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP錯誤: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        addLog('連接測試成功', 'success');
+                        showConnectionStatus('success', '連接成功');
+                    } else {
+                        addLog(`連接測試失敗: ${data.message}`, 'error');
+                        showConnectionStatus('error', `連接失敗: ${data.message}`);
+                    }
+                })
+                .catch(error => {
+                    addLog(`連接測試失敗: ${error.message}`, 'error');
+                    showConnectionStatus('error', `連接失敗: ${error.message}`);
+                });
+            }
+            
+            // 顯示連接狀態
+            function showConnectionStatus(status, message) {
+                const statusEl = document.getElementById('connection-status');
+                statusEl.style.display = 'block';
+                
+                if (status === 'checking') {
+                    statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${message}`;
+                    statusEl.className = 'alert';
+                } else if (status === 'success') {
+                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+                    statusEl.className = 'alert success';
+                } else if (status === 'error') {
+                    statusEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+                    statusEl.className = 'alert error';
+                }
             }
             
             // 添加食材行
@@ -577,6 +857,7 @@ function addRecipe(sheet, data) {
                 row.appendChild(removeBtn);
                 
                 container.appendChild(row);
+                addLog('已添加食材行');
             }
             
             // 計算百分比
@@ -614,18 +895,27 @@ function addRecipe(sheet, data) {
                 });
             }
             
-            // 保存食譜
+            // 保存食譜到Google Sheets
             function saveRecipe() {
+                if (!WEBAPP_URL) {
+                    addLog('錯誤: 未設置Web App URL', 'error');
+                    alert('請先設置Web App URL');
+                    document.querySelector('.tab[data-tab="setup"]').click();
+                    return;
+                }
+                
                 const title = document.getElementById('title').value.trim();
                 const steps = document.getElementById('steps').value.trim();
                 
                 // 驗證表單
                 if (!title) {
+                    addLog('錯誤: 未填寫食譜名稱', 'error');
                     alert('請填寫食譜名稱');
                     return;
                 }
                 
                 if (!steps) {
+                    addLog('錯誤: 未填寫做法步驟', 'error');
                     alert('請填寫做法步驟');
                     return;
                 }
@@ -645,11 +935,13 @@ function addRecipe(sheet, data) {
                     const weight = parseFloat(weightInput.value);
                     
                     if (!name) {
+                        addLog('錯誤: 有食材未選擇名稱', 'error');
                         alert('請選擇食材名稱');
                         return;
                     }
                     
                     if (isNaN(weight) || weight <= 0) {
+                        addLog('錯誤: 有食材重量無效', 'error');
                         alert('請輸入有效的重量');
                         return;
                     }
@@ -667,49 +959,121 @@ function addRecipe(sheet, data) {
                 }
                 
                 if (!hasFlour) {
+                    addLog('錯誤: 食材中沒有麵粉', 'error');
                     alert('食材中必須包含麵粉，以便計算百分比');
                     return;
                 }
                 
-                // 創建食譜對象
-                const recipe = {
-                    title: title,
-                    ingredients: ingredients,
-                    steps: steps,
-                    date: new Date().toLocaleDateString('zh-Hant')
-                };
+                addLog(`開始保存食譜: ${title}`);
                 
-                // 添加到食譜列表
-                recipes.push(recipe);
+                // 顯示載入狀態
+                const saveButton = document.getElementById('save-recipe');
+                const originalText = saveButton.innerHTML;
+                saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 保存中...';
+                saveButton.disabled = true;
                 
-                // 保存到本地存儲
-                saveRecipesToLocalStorage();
-                
-                // 更新顯示
-                displayRecipes();
-                
-                // 重置表單
-                resetForm();
-                
-                alert('食譜已成功添加！');
+                // 發送到Google Sheets
+                fetch(WEBAPP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'addRecipe',
+                        title: title,
+                        ingredients: ingredients,
+                        steps: steps
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP錯誤: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        addLog(`食譜保存成功: ${title}`, 'success');
+                        alert('食譜已成功添加到Google Sheets！');
+                        resetForm();
+                        loadRecipes();
+                    } else {
+                        addLog(`食譜保存失敗: ${data.message}`, 'error');
+                        alert('錯誤: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    addLog(`食譜保存失敗: ${error.message}`, 'error');
+                    alert('保存失敗，請檢查Web App URL和網絡連接');
+                })
+                .finally(() => {
+                    // 恢復按鈕狀態
+                    saveButton.innerHTML = originalText;
+                    saveButton.disabled = false;
+                });
             }
             
-            // 重置表單
-            function resetForm() {
-                document.getElementById('title').value = '';
-                document.getElementById('steps').value = '';
+            // 從Google Sheets加載食譜
+            function loadRecipes() {
+                if (!WEBAPP_URL) {
+                    addLog('錯誤: 未設置Web App URL', 'error');
+                    alert('請先設置Web App URL');
+                    document.querySelector('.tab[data-tab="setup"]').click();
+                    return;
+                }
                 
-                const container = document.getElementById('ingredients-container');
-                container.innerHTML = '';
+                addLog('從Google Sheets加載食譜...');
                 
-                addIngredientRow();
+                // 顯示載入狀態
+                const recipeList = document.getElementById('recipe-list');
+                recipeList.innerHTML = '<div class="alert"><i class="fas fa-spinner fa-spin"></i> 載入中...</div>';
+                
+                fetch(WEBAPP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'getRecipes'
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP錯誤: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        addLog(`成功加載 ${data.data.length} 個食譜`, 'success');
+                        displayRecipes(data.data);
+                    } else {
+                        addLog(`加載食譜失敗: ${data.message}`, 'error');
+                        recipeList.innerHTML = `
+                            <div class="alert error">
+                                <i class="fas fa-exclamation-circle"></i> 加載食譜失敗: ${data.message}
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    addLog(`加載食譜失敗: ${error.message}`, 'error');
+                    recipeList.innerHTML = `
+                        <div class="alert error">
+                            <i class="fas fa-exclamation-circle"></i> 加載食譜失敗，請檢查Web App URL和網絡連接
+                        </div>
+                    `;
+                });
             }
             
             // 顯示食譜列表
-            function displayRecipes() {
+            function displayRecipes(recipes) {
                 const container = document.getElementById('recipe-list');
                 
-                if (recipes.length === 0) {
+                if (!recipes || recipes.length === 0) {
                     container.innerHTML = `
                         <div class="alert">
                             <i class="fas fa-info-circle"></i> 尚未添加任何食譜，請使用上方表單新增您的第一個食譜。
@@ -738,7 +1102,7 @@ function addRecipe(sheet, data) {
                         <div class="recipe-card">
                             <div class="recipe-header">
                                 <h3 class="recipe-title">${recipe.title}</h3>
-                                <span class="recipe-date">${recipe.date}</span>
+                                <span class="recipe-date">${new Date(recipe.timestamp).toLocaleDateString('zh-Hant')}</span>
                             </div>
                             
                             <h4>食材</h4>
@@ -758,10 +1122,6 @@ function addRecipe(sheet, data) {
                             
                             <h4>做法</h4>
                             <div class="steps">${recipe.steps}</div>
-                            
-                            <button onclick="deleteRecipe(${index})" class="secondary">
-                                <i class="fas fa-trash"></i> 刪除食譜
-                            </button>
                         </div>
                     `;
                 });
@@ -769,32 +1129,42 @@ function addRecipe(sheet, data) {
                 container.innerHTML = html;
             }
             
-            // 刪除食譜
-            window.deleteRecipe = function(index) {
-                if (confirm('確定要刪除此食譜嗎？')) {
-                    recipes.splice(index, 1);
-                    saveRecipesToLocalStorage();
-                    displayRecipes();
-                }
-            };
-            
-            // 保存食譜到本地存儲
-            function saveRecipesToLocalStorage() {
-                localStorage.setItem('recipes', JSON.stringify(recipes));
+            // 重置表單
+            function resetForm() {
+                document.getElementById('title').value = '';
+                document.getElementById('steps').value = '';
+                
+                const container = document.getElementById('ingredients-container');
+                container.innerHTML = '';
+                
+                addIngredientRow();
+                addLog('表單已重置');
             }
             
-            // 從本地存儲加載食譜
-            function loadRecipesFromLocalStorage() {
-                const storedRecipes = localStorage.getItem('recipes');
-                
-                if (storedRecipes) {
-                    try {
-                        recipes = JSON.parse(storedRecipes);
-                        displayRecipes();
-                    } catch (e) {
-                        console.error('Error loading recipes from localStorage', e);
-                    }
+            // 查看本地存儲
+            function viewLocalStorage() {
+                addLog('查看本地存儲數據:');
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const value = localStorage.getItem(key);
+                    addLog(`${key}: ${value}`);
                 }
+            }
+            
+            // 清除本地存儲
+            function clearLocalStorage() {
+                if (confirm('確定要清除所有本地數據嗎？這將刪除保存的Web App URL。')) {
+                    localStorage.clear();
+                    addLog('本地存儲已清除', 'success');
+                    alert('本地數據已清除');
+                    location.reload();
+                }
+            }
+            
+            // 清除日誌
+            function clearLog() {
+                debugLog.innerHTML = '';
+                addLog('日誌已清除');
             }
             
             // 初始化應用
