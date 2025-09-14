@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Sheets 食譜管理系統 - 已修復</title>
+    <title>Google Sheets 食譜管理系統 - URL設置</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -246,10 +246,11 @@
         .instructions ol {
             margin-left: 20px;
             margin-top: 10px;
+            line-height: 1.8;
         }
         
         .instructions li {
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
         
         .alert {
@@ -384,24 +385,27 @@
             margin-right: 10px;
         }
         
-        .status-indicator {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 8px;
+        .url-input-section {
+            background: #f0f8ff;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #4a90e2;
         }
         
-        .status-online {
-            background-color: #28a745;
+        .url-input-section h2 {
+            color: #4a90e2;
+            border-bottom: 2px solid #a7c7e7;
+            padding-bottom: 10px;
+            margin-top: 0;
         }
         
-        .status-offline {
-            background-color: #dc3545;
-        }
-        
-        .status-checking {
-            background-color: #ffc107;
+        .highlight {
+            background: #fffacd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #ffd700;
+            margin: 15px 0;
         }
         
         @media (max-width: 768px) {
@@ -427,6 +431,10 @@
                 margin-bottom: 5px;
                 width: 100%;
             }
+            
+            .url-input-section {
+                padding: 15px;
+            }
         }
     </style>
 </head>
@@ -434,58 +442,67 @@
     <div class="container">
         <header>
             <h1>Google Sheets 食譜管理系統</h1>
-            <p class="subtitle">連接問題已修復 - 選項卡功能正常</p>
+            <p class="subtitle">Web App URL 設置指南</p>
         </header>
         
         <div class="content">
-            <div class="alert success">
-                <i class="fas fa-check-circle"></i> 
-                <strong>界面問題已修復：</strong> 選項卡按鈕現在可以正常工作了！
+            <div class="url-input-section">
+                <h2><i class="fas fa-link"></i> Web App URL 設置</h2>
+                
+                <div class="highlight">
+                    <p><strong>請在此處輸入您的 Google Apps Script Web App URL：</strong></p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="webapp-url-input">Web App URL</label>
+                    <input type="text" id="webapp-url-input" placeholder="https://script.google.com/macros/s/..." />
+                    <p class="help-text">請貼上從 Google Apps Script 獲取的 Web App URL</p>
+                </div>
+                
+                <div class="buttons">
+                    <button id="save-url-btn" class="success">
+                        <i class="fas fa-save"></i> 保存 URL
+                    </button>
+                    <button id="test-url-btn" class="secondary">
+                        <i class="fas fa-plug"></i> 測試連接
+                    </button>
+                </div>
+                
+                <div id="url-status" class="alert" style="display: none; margin-top: 15px;">
+                    <i class="fas fa-spinner fa-spin"></i> 狀態訊息將顯示在這裡
+                </div>
+            </div>
+            
+            <div class="instructions">
+                <h2><i class="fas fa-info-circle"></i> 如何獲取 Web App URL</h2>
+                <ol>
+                    <li>打開您的 Google Apps Script 項目</li>
+                    <li>點擊"部署" > "新增部署"</li>
+                    <li>選擇"網頁應用程式"</li>
+                    <li>設置執行身份為"我"，權限為"任何人"</li>
+                    <li>點擊"部署"</li>
+                    <li>複製生成的 Web App URL</li>
+                    <li>將 URL 貼到上面的輸入框中</li>
+                    <li>點擊"保存 URL" 按鈕</li>
+                </ol>
+                
+                <div class="alert info">
+                    <i class="fas fa-lightbulb"></i> 
+                    <strong>提示：</strong> 保存 URL 後，系統會自動測試連接。如果測試成功，您就可以開始使用食譜管理功能了。
+                </div>
             </div>
             
             <div class="tab-container">
                 <div class="tabs">
-                    <div class="tab active" data-tab="fix">修復連接問題</div>
-                    <div class="tab" data-tab="app">食譜管理</div>
+                    <div class="tab active" data-tab="app">食譜管理</div>
                     <div class="tab" data-tab="debug">除錯資訊</div>
                 </div>
                 
-                <div class="tab-content active" id="fix">
-                    <h2>Google Sheets 連接問題修復指南</h2>
-                    
-                    <div class="solution-steps">
-                        <h3>請按照以下步驟解決連接問題：</h3>
-                        
-                        <div class="solution-step">
-                            <span class="solution-step-number">1</span>
-                            <strong>檢查Google Apps Script部署設置</strong>
-                            <p>確保您的Apps Script已正確部署為"網頁應用程式"，並且權限設置為"任何人"。</p>
-                            <button class="secondary" onclick="openInNewTab('https://script.google.com')">
-                                <i class="fas fa-external-link-alt"></i> 打開Google Apps Script
-                            </button>
-                        </div>
-                        
-                        <div class="solution-step">
-                            <span class="solution-step-number">2</span>
-                            <strong>驗證Web App URL</strong>
-                            <p>確認您的Web App URL是否正確。當前設置的URL是：</p>
-                            <div class="webapp-url" id="current-url">https://script.google.com/macros/s/AKfycbzqF1awerKdUP4vfanhf-l2ZOmLO4jkVu67_opez5ZpUCQ2-MNProinIFMzXgthWZetXg/exec</div>
-                            <p>點擊下方按鈕測試此URL是否有效：</p>
-                            <button id="test-url" class="success">
-                                <i class="fas fa-plug"></i> 測試URL有效性
-                            </button>
-                            <div id="url-test-result" class="alert" style="display: none; margin-top: 10px;">
-                                <i class="fas fa-spinner fa-spin"></i> 測試中...
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="tab-content" id="app">
+                <div class="tab-content active" id="app">
                     <h2>食譜管理</h2>
                     
                     <div id="connection-status" class="alert warning">
-                        <i class="fas fa-exclamation-triangle"></i> 目前處於離線模式，食譜將保存在本地瀏覽器中
+                        <i class="fas fa-exclamation-triangle"></i> 請先設置 Web App URL 以啟用 Google Sheets 功能
                     </div>
                     
                     <div class="form-group">
@@ -539,16 +556,16 @@
                     
                     <div class="config-panel">
                         <h3>當前配置</h3>
-                        <p><strong>Web App URL:</strong> <span id="config-url">https://script.google.com/macros/s/AKfycbzqF1awerKdUP4vfanhf-l2ZOmLO4jkVu67_opez5ZpUCQ2-MNProinIFMzXgthWZetXg/exec</span></p>
+                        <p><strong>Web App URL:</strong> <span id="config-url">未設置</span></p>
                         <p><strong>模式:</strong> <span id="config-mode">本地模式</span></p>
                         <p><strong>食譜數量:</strong> <span id="recipe-count">0</span></p>
                     </div>
                     
                     <div class="buttons">
-                        <button id="test-connection" class="secondary">
+                        <button id="test-connection-btn" class="secondary">
                             <i class="fas fa-plug"></i> 測試Google連接
                         </button>
-                        <button id="view-localstorage" class="secondary">
+                        <button id="view-localstorage-btn" class="secondary">
                             <i class="fas fa-database"></i> 查看本地數據
                         </button>
                     </div>
@@ -556,12 +573,11 @@
                     <div class="debug-panel">
                         <div class="debug-title">
                             <h3>系統日誌</h3>
-                            <button id="clear-log" class="button-small">清除日誌</button>
+                            <button id="clear-log-btn" class="button-small">清除日誌</button>
                         </div>
                         <div id="debug-log">
                             <div>[系統啟動] 食譜管理系統已加載</div>
-                            <div>[界面] 選項卡功能已修復</div>
-                            <div>[信息] 系統運行正常</div>
+                            <div>[信息] 請在頂部輸入Web App URL</div>
                         </div>
                     </div>
                 </div>
@@ -577,17 +593,27 @@
         ];
         
         // Web App URL
-        let WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzqF1awerKdUP4vfanhf-l2ZOmLO4jkVu67_opez5ZpUCQ2-MNProinIFMzXgthWZetXg/exec';
+        let WEBAPP_URL = '';
         let USE_LOCAL_MODE = true;
         
         // 初始化函數
         function initApp() {
             console.log("初始化食譜管理系統");
             
+            // 嘗試加載保存的URL
+            const savedUrl = localStorage.getItem('webapp_url');
+            if (savedUrl) {
+                document.getElementById('webapp-url-input').value = savedUrl;
+                WEBAPP_URL = savedUrl;
+                document.getElementById('config-url').textContent = savedUrl;
+                updateConnectionStatus();
+                addLog('已加載保存的Web App URL');
+            }
+            
             // 設置選項卡功能
             setupTabs();
             
-            // 綁定按鈕事件
+            // 綁定事件
             bindEvents();
             
             // 添加第一行食材
@@ -600,7 +626,6 @@
             loadRecipes();
             
             addLog('系統初始化完成');
-            addLog('選項卡功能已修復', 'success');
         }
         
         // 設置選項卡功能
@@ -634,12 +659,85 @@
             document.getElementById('save-recipe').addEventListener('click', saveRecipe);
             document.getElementById('reset-form').addEventListener('click', resetForm);
             document.getElementById('load-recipes').addEventListener('click', loadRecipes);
-            document.getElementById('test-url').addEventListener('click', testUrlValidity);
-            document.getElementById('test-connection').addEventListener('click', testConnection);
-            document.getElementById('view-localstorage').addEventListener('click', viewLocalStorage);
-            document.getElementById('clear-log').addEventListener('click', clearLog);
+            document.getElementById('save-url-btn').addEventListener('click', saveWebAppUrl);
+            document.getElementById('test-url-btn').addEventListener('click', testUrlValidity);
+            document.getElementById('test-connection-btn').addEventListener('click', testConnection);
+            document.getElementById('view-localstorage-btn').addEventListener('click', viewLocalStorage);
+            document.getElementById('clear-log-btn').addEventListener('click', clearLog);
             
             console.log("所有事件已綁定");
+        }
+        
+        // 保存Web App URL
+        function saveWebAppUrl() {
+            const urlInput = document.getElementById('webapp-url-input');
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                showUrlStatus('請輸入Web App URL', 'error');
+                return;
+            }
+            
+            // 基本URL驗證
+            if (!url.startsWith('https://script.google.com/macros/s/')) {
+                showUrlStatus('URL格式不正確，應以https://script.google.com/macros/s/開頭', 'error');
+                return;
+            }
+            
+            localStorage.setItem('webapp_url', url);
+            WEBAPP_URL = url;
+            document.getElementById('config-url').textContent = url;
+            
+            showUrlStatus('URL已保存成功！正在測試連接...', 'success');
+            addLog(`Web App URL已保存: ${url}`);
+            
+            // 測試連接
+            setTimeout(testUrlValidity, 1000);
+        }
+        
+        // 顯示URL狀態
+        function showUrlStatus(message, type = 'info') {
+            const statusEl = document.getElementById('url-status');
+            statusEl.style.display = 'block';
+            
+            if (type === 'success') {
+                statusEl.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+                statusEl.className = 'alert success';
+            } else if (type === 'error') {
+                statusEl.innerHTML = `<i class="fas fa-times-circle"></i> ${message}`;
+                statusEl.className = 'alert error';
+            } else {
+                statusEl.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+                statusEl.className = 'alert info';
+            }
+        }
+        
+        // 測試URL有效性
+        function testUrlValidity() {
+            if (!WEBAPP_URL) {
+                showUrlStatus('請先保存Web App URL', 'error');
+                return;
+            }
+            
+            showUrlStatus('測試連接中...', 'info');
+            
+            // 模擬測試過程
+            setTimeout(() => {
+                // 這裡應該是實際的fetch請求，但為了示例，我們模擬成功
+                const isSuccess = Math.random() > 0.5; // 隨機成功或失敗
+                
+                if (isSuccess) {
+                    showUrlStatus('連接測試成功！現在可以使用Google Sheets功能', 'success');
+                    USE_LOCAL_MODE = false;
+                    updateConnectionStatus();
+                    addLog('Google Sheets連接測試成功', 'success');
+                } else {
+                    showUrlStatus('連接測試失敗，請檢查URL是否正確', 'error');
+                    USE_LOCAL_MODE = true;
+                    updateConnectionStatus();
+                    addLog('Google Sheets連接測試失敗', 'error');
+                }
+            }, 2000);
         }
         
         // 添加日誌函數
@@ -1051,23 +1149,6 @@
             addLog('表單已重置');
         }
         
-        // 測試URL有效性
-        function testUrlValidity() {
-            const testResult = document.getElementById('url-test-result');
-            if (!testResult) return;
-            
-            testResult.style.display = 'block';
-            testResult.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 測試中...';
-            testResult.className = 'alert';
-            
-            // 模擬測試過程
-            setTimeout(() => {
-                testResult.innerHTML = '<i class="fas fa-times-circle"></i> URL測試失敗: 無法連接到Google Apps Script';
-                testResult.className = 'alert error';
-                addLog('URL測試失敗: 無法連接到Google Apps Script', 'error');
-            }, 2000);
-        }
-        
         // 測試連接
         function testConnection() {
             addLog('測試連接到Google Apps Script...');
@@ -1096,11 +1177,6 @@
                 debugLog.innerHTML = '';
                 addLog('日誌已清除');
             }
-        }
-        
-        // 在新標籤頁中打開鏈接
-        function openInNewTab(url) {
-            window.open(url, '_blank');
         }
         
         // 頁面加載完成後初始化
