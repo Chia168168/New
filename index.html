@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Sheets 食譜管理系統 - URL設置</title>
+    <title>Google Sheets 資料存儲問題解決</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -408,6 +408,27 @@
             margin: 15px 0;
         }
         
+        .diagnostic-section {
+            background: #fff0f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 5px solid #ff69b4;
+        }
+        
+        .diagnostic-section h2 {
+            color: #ff69b4;
+            border-bottom: 2px solid #ffb6c1;
+        }
+        
+        .test-case {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #ffb6c1;
+        }
+        
         @media (max-width: 768px) {
             .ingredient-row {
                 flex-direction: column;
@@ -441,17 +462,18 @@
 <body>
     <div class="container">
         <header>
-            <h1>Google Sheets 食譜管理系統</h1>
-            <p class="subtitle">Web App URL 設置指南</p>
+            <h1>Google Sheets 資料存儲問題解決</h1>
+            <p class="subtitle">診斷並解決資料無法存儲到Google Sheets的問題</p>
         </header>
         
         <div class="content">
+            <div class="alert warning">
+                <i class="fas fa-exclamation-triangle"></i> 
+                <strong>檢測到問題：</strong> 連接測試成功，但資料沒有存儲到Google Sheets
+            </div>
+            
             <div class="url-input-section">
                 <h2><i class="fas fa-link"></i> Web App URL 設置</h2>
-                
-                <div class="highlight">
-                    <p><strong>請在此處輸入您的 Google Apps Script Web App URL：</strong></p>
-                </div>
                 
                 <div class="form-group">
                     <label for="webapp-url-input">Web App URL</label>
@@ -473,22 +495,159 @@
                 </div>
             </div>
             
+            <div class="diagnostic-section">
+                <h2><i class="fas fa-stethoscope"></i> 問題診斷與解決</h2>
+                
+                <div class="test-case">
+                    <h3><i class="fas fa-vial"></i> 測試 1: 檢查 Apps Script 權限</h3>
+                    <p>確保您的 Google Apps Script 已正確設置權限：</p>
+                    <ol>
+                        <li>打開您的 Google Apps Script 項目</li>
+                        <li>點擊"部署" > "部署設定"</li>
+                        <li>確保"執行身份"設置為"我"</li>
+                        <li>確保"誰有存取權"設置為"任何人"</li>
+                    </ol>
+                    <button class="secondary" onclick="openInNewTab('https://script.google.com')">
+                        <i class="fas fa-external-link-alt"></i> 打開 Google Apps Script
+                    </button>
+                </div>
+                
+                <div class="test-case">
+                    <h3><i class="fas fa-vial"></i> 測試 2: 檢查 Google Sheets 權限</h3>
+                    <p>確保您的 Google Sheets 文件已正確設置權限：</p>
+                    <ol>
+                        <li>打開您的 Google Sheets 文件</li>
+                        <li>點擊右上角的"共享"按鈕</li>
+                        <li>確保"一般存取"設置為"知道連結的任何人"，並具有"編輯者"權限</li>
+                    </ol>
+                    <button class="secondary" onclick="openInNewTab('https://docs.google.com/spreadsheets')">
+                        <i class="fas fa-external-link-alt"></i> 打開 Google Sheets
+                    </button>
+                </div>
+                
+                <div class="test-case">
+                    <h3><i class="fas fa-vial"></i> 測試 3: 驗證 Apps Script 程式碼</h3>
+                    <p>確保您的 Google Apps Script 程式碼正確無誤：</p>
+                    <div class="config-panel">
+                        <pre>
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    
+    if (data.action === "getRecipes") {
+      return getRecipes(sheet);
+    }
+    
+    if (data.action === "addRecipe") {
+      return addRecipe(sheet, data);
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: "未知操作"
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "error",
+    message: "請使用POST請求"
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getRecipes(sheet) {
+  const data = sheet.getDataRange().getValues();
+  const recipes = {};
+  
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const title = row[0];
+    
+    if (!recipes[title]) {
+      recipes[title] = {
+        title: title,
+        ingredients: [],
+        steps: row[5] || "",
+        timestamp: row[6] || ""
+      };
+    }
+    
+    recipes[title].ingredients.push({
+      name: row[1] || "",
+      weight: row[2] || 0,
+      percent: row[3] || "",
+      desc: row[4] || ""
+    });
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "success",
+    data: Object.values(recipes)
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function addRecipe(sheet, data) {
+  const timestamp = new Date().toISOString();
+  
+  data.ingredients.forEach(ingredient => {
+    sheet.appendRow([
+      data.title,
+      ingredient.name,
+      ingredient.weight,
+      ingredient.percent,
+      ingredient.desc || "",
+      data.steps,
+      timestamp
+    ]);
+  });
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "success",
+    message: "食譜已添加"
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+                        </pre>
+                    </div>
+                    <button class="secondary" onclick="copyScriptCode()">
+                        <i class="fas fa-copy"></i> 複製程式碼
+                    </button>
+                </div>
+                
+                <div class="test-case">
+                    <h3><i class="fas fa-vial"></i> 測試 4: 測試資料發送</h3>
+                    <p>發送測試資料到您的 Google Apps Script：</p>
+                    <div class="buttons">
+                        <button id="send-test-data-btn" class="success">
+                            <i class="fas fa-paper-plane"></i> 發送測試資料
+                        </button>
+                    </div>
+                    <div id="test-data-result" class="alert" style="display: none; margin-top: 10px;">
+                        <i class="fas fa-spinner fa-spin"></i> 測試結果將顯示在這裡
+                    </div>
+                </div>
+            </div>
+            
             <div class="instructions">
-                <h2><i class="fas fa-info-circle"></i> 如何獲取 Web App URL</h2>
+                <h2><i class="fas fa-info-circle"></i> 如何解決資料存儲問題</h2>
                 <ol>
-                    <li>打開您的 Google Apps Script 項目</li>
-                    <li>點擊"部署" > "新增部署"</li>
-                    <li>選擇"網頁應用程式"</li>
-                    <li>設置執行身份為"我"，權限為"任何人"</li>
-                    <li>點擊"部署"</li>
-                    <li>複製生成的 Web App URL</li>
-                    <li>將 URL 貼到上面的輸入框中</li>
-                    <li>點擊"保存 URL" 按鈕</li>
+                    <li><strong>檢查 Apps Script 權限</strong>：確保您的 Apps Script 已正確部署並設置了適當的權限</li>
+                    <li><strong>檢查 Google Sheets 權限</strong>：確保您的 Google Sheets 文件允許任何人編輯</li>
+                    <li><strong>驗證程式碼</strong>：確保您的 Apps Script 程式碼正確無誤</li>
+                    <li><strong>檢查執行日誌</strong>：在 Apps Script 編輯器中查看執行日誌，檢查是否有錯誤訊息</li>
+                    <li><strong>重新部署</strong>：如果問題持續存在，嘗試重新部署您的 Apps Script</li>
                 </ol>
                 
                 <div class="alert info">
                     <i class="fas fa-lightbulb"></i> 
-                    <strong>提示：</strong> 保存 URL 後，系統會自動測試連接。如果測試成功，您就可以開始使用食譜管理功能了。
+                    <strong>提示：</strong> 如果以上步驟都無法解決問題，請檢查瀏覽器的開發者工具（按F12）中的"網路"標籤，查看發送請求的詳細資訊和回應。
                 </div>
             </div>
             
@@ -502,7 +661,7 @@
                     <h2>食譜管理</h2>
                     
                     <div id="connection-status" class="alert warning">
-                        <i class="fas fa-exclamation-triangle"></i> 請先設置 Web App URL 以啟用 Google Sheets 功能
+                        <i class="fas fa-exclamation-triangle"></i> 請先設置 Web App URL 並解決存儲問題
                     </div>
                     
                     <div class="form-group">
@@ -577,7 +736,7 @@
                         </div>
                         <div id="debug-log">
                             <div>[系統啟動] 食譜管理系統已加載</div>
-                            <div>[信息] 請在頂部輸入Web App URL</div>
+                            <div>[信息] 請在頂部輸入Web App URL並診斷存儲問題</div>
                         </div>
                     </div>
                 </div>
@@ -664,6 +823,7 @@
             document.getElementById('test-connection-btn').addEventListener('click', testConnection);
             document.getElementById('view-localstorage-btn').addEventListener('click', viewLocalStorage);
             document.getElementById('clear-log-btn').addEventListener('click', clearLog);
+            document.getElementById('send-test-data-btn').addEventListener('click', sendTestData);
             
             console.log("所有事件已綁定");
         }
@@ -738,6 +898,176 @@
                     addLog('Google Sheets連接測試失敗', 'error');
                 }
             }, 2000);
+        }
+        
+        // 發送測試資料
+        function sendTestData() {
+            if (!WEBAPP_URL) {
+                showTestDataResult('請先設置Web App URL', 'error');
+                return;
+            }
+            
+            showTestDataResult('發送測試資料中...', 'info');
+            
+            const testData = {
+                action: 'addRecipe',
+                title: '測試食譜',
+                ingredients: [
+                    {
+                        name: '麵粉',
+                        weight: 500,
+                        percent: '100%',
+                        desc: '高筋麵粉'
+                    },
+                    {
+                        name: '水',
+                        weight: 300,
+                        percent: '60%',
+                        desc: '常溫水'
+                    }
+                ],
+                steps: '1. 混合所有材料\n2. 揉成麵團\n3. 發酵1小時\n4. 烘烤30分鐘'
+            };
+            
+            fetch(WEBAPP_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(testData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP錯誤: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    showTestDataResult('測試資料發送成功！請檢查Google Sheets是否已收到資料。', 'success');
+                    addLog('測試資料發送成功', 'success');
+                } else {
+                    showTestDataResult(`測試資料發送失敗: ${data.message}`, 'error');
+                    addLog(`測試資料發送失敗: ${data.message}`, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showTestDataResult(`測試資料發送失敗: ${error.message}`, 'error');
+                addLog(`測試資料發送失敗: ${error.message}`, 'error');
+            });
+        }
+        
+        // 顯示測試資料結果
+        function showTestDataResult(message, type = 'info') {
+            const resultEl = document.getElementById('test-data-result');
+            resultEl.style.display = 'block';
+            
+            if (type === 'success') {
+                resultEl.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+                resultEl.className = 'alert success';
+            } else if (type === 'error') {
+                resultEl.innerHTML = `<i class="fas fa-times-circle"></i> ${message}`;
+                resultEl.className = 'alert error';
+            } else {
+                resultEl.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+                resultEl.className = 'alert info';
+            }
+        }
+        
+        // 複製Apps Script程式碼
+        function copyScriptCode() {
+            const code = `function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    
+    if (data.action === "getRecipes") {
+      return getRecipes(sheet);
+    }
+    
+    if (data.action === "addRecipe") {
+      return addRecipe(sheet, data);
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: "未知操作"
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "error",
+    message: "請使用POST請求"
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getRecipes(sheet) {
+  const data = sheet.getDataRange().getValues();
+  const recipes = {};
+  
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const title = row[0];
+    
+    if (!recipes[title]) {
+      recipes[title] = {
+        title: title,
+        ingredients: [],
+        steps: row[5] || "",
+        timestamp: row[6] || ""
+      };
+    }
+    
+    recipes[title].ingredients.push({
+      name: row[1] || "",
+      weight: row[2] || 0,
+      percent: row[3] || "",
+      desc: row[4] || ""
+    });
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "success",
+    data: Object.values(recipes)
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function addRecipe(sheet, data) {
+  const timestamp = new Date().toISOString();
+  
+  data.ingredients.forEach(ingredient => {
+    sheet.appendRow([
+      data.title,
+      ingredient.name,
+      ingredient.weight,
+      ingredient.percent,
+      ingredient.desc || "",
+      data.steps,
+      timestamp
+    ]);
+  });
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "success",
+    message: "食譜已添加"
+  })).setMimeType(ContentService.MimeType.JSON);
+}`;
+
+            navigator.clipboard.writeText(code).then(() => {
+                alert('程式碼已複製到剪貼簿！請貼到您的Google Apps Script專案中。');
+            }).catch(err => {
+                console.error('無法複製程式碼: ', err);
+                alert('複製失敗，請手動複製程式碼。');
+            });
         }
         
         // 添加日誌函數
@@ -957,8 +1287,72 @@
                 return;
             }
             
-            // 保存到本地存儲
-            saveRecipeToLocalStorage(title.value.trim(), ingredients, steps.value.trim());
+            if (USE_LOCAL_MODE) {
+                // 保存到本地存儲
+                saveRecipeToLocalStorage(title.value.trim(), ingredients, steps.value.trim());
+            } else {
+                // 保存到Google Sheets
+                saveRecipeToGoogleSheets(title.value.trim(), ingredients, steps.value.trim());
+            }
+        }
+        
+        // 保存食譜到Google Sheets
+        function saveRecipeToGoogleSheets(title, ingredients, steps) {
+            addLog(`開始保存食譜到Google Sheets: ${title}`);
+            
+            // 顯示載入狀態
+            const saveButton = document.getElementById('save-recipe');
+            const originalText = saveButton.innerHTML;
+            saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 保存中...';
+            saveButton.disabled = true;
+            
+            // 發送到Google Sheets
+            fetch(WEBAPP_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'addRecipe',
+                    title: title,
+                    ingredients: ingredients,
+                    steps: steps
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP錯誤: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    addLog(`食譜保存成功: ${title}`, 'success');
+                    alert('食譜已成功添加到Google Sheets！');
+                    resetForm();
+                    loadRecipes();
+                } else {
+                    addLog(`食譜保存失敗: ${data.message}`, 'error');
+                    alert('錯誤: ' + data.message);
+                    // 失敗時切換到本地模式
+                    USE_LOCAL_MODE = true;
+                    updateConnectionStatus();
+                    saveRecipeToLocalStorage(title, ingredients, steps);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addLog(`食譜保存失敗: ${error.message}`, 'error');
+                alert('保存失敗，自動切換到本地模式');
+                USE_LOCAL_MODE = true;
+                updateConnectionStatus();
+                saveRecipeToLocalStorage(title, ingredients, steps);
+            })
+            .finally(() => {
+                // 恢復按鈕狀態
+                saveButton.innerHTML = originalText;
+                saveButton.disabled = false;
+            });
         }
         
         // 保存食譜到本地存儲
@@ -1177,6 +1571,11 @@
                 debugLog.innerHTML = '';
                 addLog('日誌已清除');
             }
+        }
+        
+        // 在新標籤頁中打開鏈接
+        function openInNewTab(url) {
+            window.open(url, '_blank');
         }
         
         // 頁面加載完成後初始化
