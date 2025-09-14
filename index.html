@@ -1,9 +1,26 @@
+Google Sheets 食譜管理系統 - 連接問題解決方案
+
+從您的日誌中可以看到，系統遇到了"Load failed"錯誤，這表明您的Google Apps Script Web App URL存在連接問題。讓我為您提供一個完整的解決方案來診斷和修復這個問題。
+
+問題分析
+
+從日誌可以看到：
+
+1. Web App URL已正確加載：https://script.google.com/macros/s/AKfycbzqF1awerKdUP4vfanhf-l2ZOmLO4jkVu67_opez5ZpUCQ2-MNProinIFMzXgthWZetXg/exec
+2. 但連接測試失敗，顯示"Load failed"錯誤
+3. 本地存儲中已經有食譜數據，說明之前使用過本地模式
+
+解決方案
+
+我將創建一個增強版的食譜管理系統，包含詳細的錯誤診斷和修復指南：
+
+```html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Sheets 食譜管理系統</title>
+    <title>Google Sheets 食譜管理系統 - 連接問題解決</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -172,6 +189,14 @@
             background-color: #218838;
         }
         
+        button.danger {
+            background-color: #dc3545;
+        }
+        
+        button.danger:hover {
+            background-color: #c82333;
+        }
+        
         .recipe-list {
             margin-top: 20px;
         }
@@ -261,6 +286,16 @@
             border-left: 4px solid #ff4757;
         }
         
+        .alert.warning {
+            background: #fff4e6;
+            border-left: 4px solid #ffa94d;
+        }
+        
+        .alert.info {
+            background: #e6f3ff;
+            border-left: 4px solid #4a90e2;
+        }
+        
         .config-panel {
             background: #f8f9fa;
             padding: 20px;
@@ -330,6 +365,33 @@
             margin-bottom: 10px;
         }
         
+        .solution-steps {
+            background: #f8fff9;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #28a745;
+        }
+        
+        .solution-step {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .solution-step-number {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            background: #28a745;
+            color: white;
+            text-align: center;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
         @media (max-width: 768px) {
             .ingredient-row {
                 flex-direction: column;
@@ -359,199 +421,103 @@
     <div class="container">
         <header>
             <h1>Google Sheets 食譜管理系統</h1>
-            <p class="subtitle">輕鬆管理您的烘焙食譜，自動計算食材百分比</p>
+            <p class="subtitle">連接問題解決與診斷工具</p>
         </header>
         
         <div class="content">
+            <div class="alert warning">
+                <i class="fas fa-exclamation-triangle"></i> 
+                <strong>檢測到連接問題：</strong> 您的Google Apps Script Web App URL無法正常連接，錯誤訊息：Load failed
+            </div>
+            
             <div class="tab-container">
                 <div class="tabs">
-                    <div class="tab active" data-tab="usage">使用說明</div>
-                    <div class="tab" data-tab="setup">Google Sheets設置</div>
+                    <div class="tab active" data-tab="fix">修復連接問題</div>
                     <div class="tab" data-tab="app">食譜管理</div>
                     <div class="tab" data-tab="debug">除錯資訊</div>
                 </div>
                 
-                <div class="tab-content active" id="usage">
-                    <div class="instructions">
-                        <h2>如何使用本系統</h2>
-                        <ol>
-                            <li>首先按照"Google Sheets設置"選項卡中的說明設置您的Google Sheets和Apps Script</li>
-                            <li>在"食譜管理"選項卡中填寫食譜名稱</li>
-                            <li>添加所有食材，系統會自動計算百分比（以麵粉為100%基準）</li>
-                            <li>輸入詳細的做法步驟</li>
-                            <li>點擊"新增食譜"按鈕保存到Google Sheets</li>
-                            <li>您的食譜將會顯示在下方列表中</li>
-                            <li>如果遇到問題，請查看"除錯資訊"選項卡</li>
-                        </ol>
+                <div class="tab-content active" id="fix">
+                    <h2>Google Sheets 連接問題修復指南</h2>
+                    
+                    <div class="solution-steps">
+                        <h3>請按照以下步驟解決連接問題：</h3>
+                        
+                        <div class="solution-step">
+                            <span class="solution-step-number">1</span>
+                            <strong>檢查Google Apps Script部署設置</strong>
+                            <p>確保您的Apps Script已正確部署為"網頁應用程式"，並且權限設置為"任何人"。</p>
+                            <button class="secondary" onclick="openInNewTab('https://script.google.com')">
+                                <i class="fas fa-external-link-alt"></i> 打開Google Apps Script
+                            </button>
+                        </div>
+                        
+                        <div class="solution-step">
+                            <span class="solution-step-number">2</span>
+                            <strong>驗證Web App URL</strong>
+                            <p>確認您的Web App URL是否正確。當前設置的URL是：</p>
+                            <div class="webapp-url" id="current-url">https://script.google.com/macros/s/AKfycbzqF1awerKdUP4vfanhf-l2ZOmLO4jkVu67_opez5ZpUCQ2-MNProinIFMzXgthWZetXg/exec</div>
+                            <p>點擊下方按鈕測試此URL是否有效：</p>
+                            <button id="test-url" class="success">
+                                <i class="fas fa-plug"></i> 測試URL有效性
+                            </button>
+                            <div id="url-test-result" class="alert" style="display: none; margin-top: 10px;">
+                                <i class="fas fa-spinner fa-spin"></i> 測試中...
+                            </div>
+                        </div>
+                        
+                        <div class="solution-step">
+                            <span class="solution-step-number">3</span>
+                            <strong>重新部署Apps Script</strong>
+                            <p>如果URL無效，請嘗試重新部署Apps Script並獲取新的URL：</p>
+                            <ol>
+                                <li>打開您的Google Apps Script項目</li>
+                                <li>點擊"部署" > "新增部署"</li>
+                                <li>選擇"網頁應用程式"</li>
+                                <li>設置執行身份為"我"，權限為"任何人"</li>
+                                <li>點擊"部署"並複製新的URL</li>
+                                <li>將新URL貼到下方的輸入框中</li>
+                            </ol>
+                            
+                            <div class="form-group">
+                                <label for="new-webapp-url">新的Web App URL</label>
+                                <input type="text" id="new-webapp-url" placeholder="https://script.google.com/macros/s/..." />
+                                <button id="save-new-url" class="success" style="margin-top: 10px;">
+                                    <i class="fas fa-save"></i> 保存新URL
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="solution-step">
+                            <span class="solution-step-number">4</span>
+                            <strong>檢查Google Sheets權限</strong>
+                            <p>確保您的Google Sheets文件已設置為"任何人擁有連結者均可編輯"：</p>
+                            <button class="secondary" onclick="openInNewTab('https://docs.google.com/spreadsheets')">
+                                <i class="fas fa-external-link-alt"></i> 打開Google Sheets
+                            </button>
+                        </div>
+                        
+                        <div class="solution-step">
+                            <span class="solution-step-number">5</span>
+                            <strong>使用本地模式</strong>
+                            <p>如果無法解決Google Sheets連接問題，您可以暫時使用本地模式保存食譜：</p>
+                            <button id="enable-local-mode" class="secondary">
+                                <i class="fas fa-database"></i> 啟用本地模式
+                            </button>
+                        </div>
                     </div>
                     
-                    <div class="alert">
+                    <div class="alert info">
                         <i class="fas fa-info-circle"></i> 
-                        <strong>常見問題解決：</strong>
-                        <ul>
-                            <li>如果"新增食譜"沒有反應，請檢查Web App URL是否正確</li>
-                            <li>確保Google Apps Script已部署為"網頁應用程式"</li>
-                            <li>權限設置應為"任何人"</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="tab-content" id="setup">
-                    <h2>Google Sheets 設置指南</h2>
-                    
-                    <div class="alert">
-                        <i class="fas fa-info-circle"></i> 請按照以下步驟設置您的Google Sheets和Apps Script
-                    </div>
-                    
-                    <h3>步驟 1: 創建Google Sheet</h3>
-                    <ol>
-                        <li>打開 <a href="https://sheets.google.com" target="_blank">Google Sheets</a></li>
-                        <li>創建一個新的空白表格</li>
-                        <li>將表格命名為"食譜管理"</li>
-                        <li>在第一行創建以下列標題：
-                            <ul>
-                                <li>A列: 食譜名稱</li>
-                                <li>B列: 食材名稱</li>
-                                <li>C列: 重量 (克)</li>
-                                <li>D列: 百分比</li>
-                                <li>E列: 說明</li>
-                                <li>F列: 做法步驟</li>
-                                <li>G列: 時間戳記</li>
-                            </ul>
-                        </li>
-                    </ol>
-                    
-                    <h3>步驟 2: 創建Apps Script</h3>
-                    <ol>
-                        <li>在Google Sheets中，點擊"擴展功能" > "Apps Script"</li>
-                        <li>將預設的程式碼替換為以下代碼：</li>
-                    </ol>
-                    
-                    <div class="config-panel">
-                        <pre>
-function doPost(e) {
-  try {
-    const data = JSON.parse(e.postData.contents);
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-    
-    // 如果是獲取食譜請求
-    if (data.action === "getRecipes") {
-      return getRecipes(sheet);
-    }
-    
-    // 如果是添加食譜請求
-    if (data.action === "addRecipe") {
-      return addRecipe(sheet, data);
-    }
-    
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "error",
-      message: "未知操作"
-    })).setMimeType(ContentService.MimeType.JSON);
-    
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "error",
-      message: error.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function doGet(e) {
-  return ContentService.createTextOutput(JSON.stringify({
-    status: "error",
-    message: "請使用POST請求"
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-function getRecipes(sheet) {
-  const data = sheet.getDataRange().getValues();
-  const recipes = {};
-  
-  // 跳過標題行
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    const title = row[0];
-    
-    if (!recipes[title]) {
-      recipes[title] = {
-        title: title,
-        ingredients: [],
-        steps: row[5] || "",
-        timestamp: row[6] || ""
-      };
-    }
-    
-    recipes[title].ingredients.push({
-      name: row[1] || "",
-      weight: row[2] || 0,
-      percent: row[3] || "",
-      desc: row[4] || ""
-    });
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    status: "success",
-    data: Object.values(recipes)
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-function addRecipe(sheet, data) {
-  const timestamp = new Date().toISOString();
-  
-  data.ingredients.forEach(ingredient => {
-    sheet.appendRow([
-      data.title,
-      ingredient.name,
-      ingredient.weight,
-      ingredient.percent,
-      ingredient.desc || "",
-      data.steps,
-      timestamp
-    ]);
-  });
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    status: "success",
-    message: "食譜已添加"
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-                        </pre>
-                    </div>
-                    
-                    <ol start="3">
-                        <li>點擊"保存"按鈕，為項目命名（例如"食譜管理系統"）</li>
-                        <li>點擊"部署" > "新增部署"</li>
-                        <li>選擇"網頁應用程式"</li>
-                        <li>設置執行身份為"我"，權限為"任何人"</li>
-                        <li>點擊"部署"</li>
-                        <li>複製生成的Web App URL</li>
-                        <li>在下面的輸入框中貼上URL：</li>
-                    </ol>
-                    
-                    <div class="form-group">
-                        <label for="webapp-url">Web App URL</label>
-                        <input type="text" id="webapp-url" placeholder="https://script.google.com/macros/s/..." />
-                        <button id="save-url" class="success" style="margin-top: 10px;">
-                            <i class="fas fa-save"></i> 保存URL
-                        </button>
-                    </div>
-                    
-                    <div class="alert success" id="url-saved-message" style="display: none;">
-                        <i class="fas fa-check-circle"></i> URL已保存成功！
-                    </div>
-                    
-                    <div class="alert">
-                        <i class="fas fa-exclamation-triangle"></i> 
-                        <strong>重要：</strong> 部署後可能需要幾分鐘時間才能生效。如果遇到權限問題，請確保已正確設置"任何人"權限。
+                        <strong>提示：</strong> 完成上述步驟後，請點擊"測試URL有效性"按鈕確認問題是否已解決。
                     </div>
                 </div>
                 
                 <div class="tab-content" id="app">
                     <h2>食譜管理</h2>
                     
-                    <div id="connection-status" class="alert" style="display: none;">
-                        <i class="fas fa-spinner fa-spin"></i> 檢查連接中...
+                    <div id="connection-status" class="alert warning">
+                        <i class="fas fa-exclamation-triangle"></i> 目前處於離線模式，食譜將保存在本地瀏覽器中
                     </div>
                     
                     <div class="form-group">
@@ -584,6 +550,9 @@ function addRecipe(sheet, data) {
                         <button type="button" id="reset-form" class="secondary">
                             <i class="fas fa-redo"></i> 重設表單
                         </button>
+                        <button type="button" id="export-data" class="success">
+                            <i class="fas fa-download"></i> 導出數據
+                        </button>
                     </div>
                     
                     <div class="section">
@@ -600,27 +569,38 @@ function addRecipe(sheet, data) {
                     <h2>除錯資訊</h2>
                     
                     <div class="alert">
-                        <i class="fas fa-bug"></i> 如果"新增食譜"沒有反應，請檢查以下資訊：
+                        <i class="fas fa-bug"></i> 連接問題診斷資訊
                     </div>
                     
                     <div class="buttons">
                         <button id="test-connection" class="secondary">
-                            <i class="fas fa-plug"></i> 測試連接
+                            <i class="fas fa-plug"></i> 測試Google連接
                         </button>
                         <button id="view-localstorage" class="secondary">
-                            <i class="fas fa-database"></i> 查看保存的數據
+                            <i class="fas fa-database"></i> 查看本地數據
                         </button>
-                        <button id="clear-data" class="secondary">
-                            <i class="fas fa-trash"></i> 清除本地數據
+                        <button id="clear-data" class="danger">
+                            <i class="fas fa-trash"></i> 清除所有數據
                         </button>
                     </div>
                     
                     <div class="debug-panel">
                         <div class="debug-title">
-                            <h3>日誌資訊</h3>
+                            <h3>診斷日誌</h3>
                             <button id="clear-log" class="button-small">清除日誌</button>
                         </div>
-                        <div id="debug-log"></div>
+                        <div id="debug-log">
+                            <div>[系統啟動] 食譜管理系統已加載</div>
+                            <div>[錯誤] Google Sheets連接失敗: Load failed</div>
+                            <div>[信息] 已啟用本地模式，數據將保存在瀏覽器中</div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-panel">
+                        <h3>當前配置</h3>
+                        <p><strong>Web App URL:</strong> <span id="config-url">https://script.google.com/macros/s/AKfycbzqF1awerKdUP4vfanhf-l2ZOmLO4jkVu67_opez5ZpUCQ2-MNProinIFMzXgthWZetXg/exec</span></p>
+                        <p><strong>模式:</strong> <span id="config-mode">本地模式</span></p>
+                        <p><strong>食譜數量:</strong> <span id="recipe-count">0</span></p>
                     </div>
                 </div>
             </div>
@@ -636,7 +616,8 @@ function addRecipe(sheet, data) {
             ];
             
             // Web App URL
-            let WEBAPP_URL = '';
+            let WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzqF1awerKdUP4vfanhf-l2ZOmLO4jkVu67_opez5ZpUCQ2-MNProinIFMzXgthWZetXg/exec';
+            let USE_LOCAL_MODE = true;
             
             // 除錯日誌
             const debugLog = document.getElementById('debug-log');
@@ -650,10 +631,17 @@ function addRecipe(sheet, data) {
                     logEntry.style.color = '#ff4757';
                 } else if (type === 'success') {
                     logEntry.style.color = '#00b894';
+                } else if (type === 'warning') {
+                    logEntry.style.color = '#ffa94d';
                 }
                 
                 debugLog.appendChild(logEntry);
                 debugLog.scrollTop = debugLog.scrollHeight;
+            }
+            
+            // 在新標籤頁中打開鏈接
+            function openInNewTab(url) {
+                window.open(url, '_blank');
             }
             
             // 初始化
@@ -664,10 +652,17 @@ function addRecipe(sheet, data) {
                 const savedUrl = localStorage.getItem('webapp_url');
                 if (savedUrl) {
                     document.getElementById('webapp-url').value = savedUrl;
+                    document.getElementById('current-url').textContent = savedUrl;
+                    document.getElementById('config-url').textContent = savedUrl;
                     WEBAPP_URL = savedUrl;
                     addLog(`已加載保存的Web App URL: ${savedUrl}`);
+                    
+                    // 測試連接
+                    testConnection();
                 } else {
-                    addLog('未找到保存的Web App URL', 'error');
+                    addLog('未找到保存的Web App URL', 'warning');
+                    USE_LOCAL_MODE = true;
+                    updateConnectionStatus();
                 }
                 
                 // 添加第一行食材
@@ -678,11 +673,14 @@ function addRecipe(sheet, data) {
                 document.getElementById('save-recipe').addEventListener('click', saveRecipe);
                 document.getElementById('reset-form').addEventListener('click', resetForm);
                 document.getElementById('load-recipes').addEventListener('click', loadRecipes);
-                document.getElementById('save-url').addEventListener('click', saveWebAppUrl);
+                document.getElementById('save-new-url').addEventListener('click', saveNewWebAppUrl);
+                document.getElementById('test-url').addEventListener('click', testUrlValidity);
+                document.getElementById('enable-local-mode').addEventListener('click', enableLocalMode);
                 document.getElementById('test-connection').addEventListener('click', testConnection);
                 document.getElementById('view-localstorage').addEventListener('click', viewLocalStorage);
                 document.getElementById('clear-data').addEventListener('click', clearLocalStorage);
                 document.getElementById('clear-log').addEventListener('click', clearLog);
+                document.getElementById('export-data').addEventListener('click', exportData);
                 
                 // 標籤切換
                 document.querySelectorAll('.tab').forEach(tab => {
@@ -695,18 +693,73 @@ function addRecipe(sheet, data) {
                     });
                 });
                 
-                // 嘗試加載食譜
-                if (WEBAPP_URL) {
-                    testConnection();
-                    loadRecipes();
-                }
+                // 加載食譜
+                loadRecipes();
                 
                 addLog('系統初始化完成');
+                addLog('Google Sheets連接失敗，已啟用本地模式', 'warning');
             }
             
-            // 保存Web App URL
-            function saveWebAppUrl() {
-                const url = document.getElementById('webapp-url').value.trim();
+            // 更新連接狀態顯示
+            function updateConnectionStatus() {
+                const statusEl = document.getElementById('connection-status');
+                const modeEl = document.getElementById('config-mode');
+                
+                if (USE_LOCAL_MODE) {
+                    statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> 目前處於離線模式，食譜將保存在本地瀏覽器中';
+                    statusEl.className = 'alert warning';
+                    modeEl.textContent = '本地模式';
+                } else {
+                    statusEl.innerHTML = '<i class="fas fa-check-circle"></i> 已連接到Google Sheets';
+                    statusEl.className = 'alert success';
+                    modeEl.textContent = 'Google Sheets模式';
+                }
+            }
+            
+            // 測試URL有效性
+            function testUrlValidity() {
+                const testResult = document.getElementById('url-test-result');
+                testResult.style.display = 'block';
+                testResult.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 測試中...';
+                testResult.className = 'alert';
+                
+                fetch(WEBAPP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'getRecipes'
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP錯誤: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        testResult.innerHTML = '<i class="fas fa-check-circle"></i> URL測試成功！可以正常連接到Google Sheets';
+                        testResult.className = 'alert success';
+                        USE_LOCAL_MODE = false;
+                        updateConnectionStatus();
+                    } else {
+                        throw new Error(data.message);
+                    }
+                })
+                .catch(error => {
+                    testResult.innerHTML = `<i class="fas fa-times-circle"></i> URL測試失敗: ${error.message}`;
+                    testResult.className = 'alert error';
+                    USE_LOCAL_MODE = true;
+                    updateConnectionStatus();
+                });
+            }
+            
+            // 保存新的Web App URL
+            function saveNewWebAppUrl() {
+                const url = document.getElementById('new-webapp-url').value.trim();
                 if (!url) {
                     alert('請輸入Web App URL');
                     return;
@@ -715,34 +768,30 @@ function addRecipe(sheet, data) {
                 localStorage.setItem('webapp_url', url);
                 WEBAPP_URL = url;
                 
-                addLog(`Web App URL已保存: ${url}`);
+                document.getElementById('current-url').textContent = url;
+                document.getElementById('config-url').textContent = url;
                 
-                // 顯示成功消息
-                const message = document.getElementById('url-saved-message');
-                message.style.display = 'block';
-                setTimeout(() => {
-                    message.style.display = 'none';
-                }, 3000);
-                
-                // 測試連接
-                testConnection();
+                addLog(`新的Web App URL已保存: ${url}`);
+                alert('新的URL已保存！請點擊"測試URL有效性"按鈕驗證連接。');
+            }
+            
+            // 啟用本地模式
+            function enableLocalMode() {
+                USE_LOCAL_MODE = true;
+                updateConnectionStatus();
+                addLog('已手動啟用本地模式', 'info');
+                alert('已啟用本地模式。食譜將保存在瀏覽器中，直到Google Sheets連接問題解決。');
             }
             
             // 測試連接
             function testConnection() {
-                if (!WEBAPP_URL) {
-                    addLog('錯誤: 未設置Web App URL', 'error');
-                    showConnectionStatus('error', '未設置Web App URL');
-                    return;
-                }
-                
                 addLog('測試連接到Google Apps Script...');
-                showConnectionStatus('checking', '檢查連接中...');
                 
                 fetch(WEBAPP_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                     },
                     body: JSON.stringify({
                         action: 'getRecipes'
@@ -757,33 +806,19 @@ function addRecipe(sheet, data) {
                 .then(data => {
                     if (data.status === 'success') {
                         addLog('連接測試成功', 'success');
-                        showConnectionStatus('success', '連接成功');
+                        USE_LOCAL_MODE = false;
+                        updateConnectionStatus();
+                        alert('連接測試成功！現在可以使用Google Sheets保存食譜。');
                     } else {
-                        addLog(`連接測試失敗: ${data.message}`, 'error');
-                        showConnectionStatus('error', `連接失敗: ${data.message}`);
+                        throw new Error(data.message);
                     }
                 })
                 .catch(error => {
                     addLog(`連接測試失敗: ${error.message}`, 'error');
-                    showConnectionStatus('error', `連接失敗: ${error.message}`);
+                    USE_LOCAL_MODE = true;
+                    updateConnectionStatus();
+                    alert(`連接測試失敗: ${error.message}. 系統將使用本地模式。`);
                 });
-            }
-            
-            // 顯示連接狀態
-            function showConnectionStatus(status, message) {
-                const statusEl = document.getElementById('connection-status');
-                statusEl.style.display = 'block';
-                
-                if (status === 'checking') {
-                    statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${message}`;
-                    statusEl.className = 'alert';
-                } else if (status === 'success') {
-                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
-                    statusEl.className = 'alert success';
-                } else if (status === 'error') {
-                    statusEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-                    statusEl.className = 'alert error';
-                }
             }
             
             // 添加食材行
@@ -895,15 +930,8 @@ function addRecipe(sheet, data) {
                 });
             }
             
-            // 保存食譜到Google Sheets
+            // 保存食譜
             function saveRecipe() {
-                if (!WEBAPP_URL) {
-                    addLog('錯誤: 未設置Web App URL', 'error');
-                    alert('請先設置Web App URL');
-                    document.querySelector('.tab[data-tab="setup"]').click();
-                    return;
-                }
-                
                 const title = document.getElementById('title').value.trim();
                 const steps = document.getElementById('steps').value.trim();
                 
@@ -964,7 +992,18 @@ function addRecipe(sheet, data) {
                     return;
                 }
                 
-                addLog(`開始保存食譜: ${title}`);
+                if (USE_LOCAL_MODE) {
+                    // 本地模式保存
+                    saveRecipeToLocalStorage(title, ingredients, steps);
+                } else {
+                    // Google Sheets模式保存
+                    saveRecipeToGoogleSheets(title, ingredients, steps);
+                }
+            }
+            
+            // 保存食譜到Google Sheets
+            function saveRecipeToGoogleSheets(title, ingredients, steps) {
+                addLog(`開始保存食譜到Google Sheets: ${title}`);
                 
                 // 顯示載入狀態
                 const saveButton = document.getElementById('save-recipe');
@@ -1005,7 +1044,10 @@ function addRecipe(sheet, data) {
                 .catch(error => {
                     console.error('Error:', error);
                     addLog(`食譜保存失敗: ${error.message}`, 'error');
-                    alert('保存失敗，請檢查Web App URL和網絡連接');
+                    alert('保存失敗，自動切換到本地模式');
+                    USE_LOCAL_MODE = true;
+                    updateConnectionStatus();
+                    saveRecipeToLocalStorage(title, ingredients, steps);
                 })
                 .finally(() => {
                     // 恢復按鈕狀態
@@ -1014,12 +1056,46 @@ function addRecipe(sheet, data) {
                 });
             }
             
+            // 保存食譜到本地存儲
+            function saveRecipeToLocalStorage(title, ingredients, steps) {
+                addLog(`保存食譜到本地存儲: ${title}`);
+                
+                // 從本地存儲加載現有食譜
+                let recipes = [];
+                const storedRecipes = localStorage.getItem('recipes');
+                if (storedRecipes) {
+                    try {
+                        recipes = JSON.parse(storedRecipes);
+                    } catch (e) {
+                        console.error('Error parsing recipes from localStorage', e);
+                    }
+                }
+                
+                // 添加新食譜
+                const newRecipe = {
+                    title: title,
+                    ingredients: ingredients,
+                    steps: steps,
+                    date: new Date().toLocaleDateString('zh-Hant')
+                };
+                
+                recipes.push(newRecipe);
+                
+                // 保存回本地存儲
+                localStorage.setItem('recipes', JSON.stringify(recipes));
+                
+                addLog(`食譜已保存到本地存儲: ${title}`, 'success');
+                alert('食譜已保存到本地存儲！');
+                
+                // 更新UI
+                resetForm();
+                loadRecipes();
+            }
+            
             // 從Google Sheets加載食譜
             function loadRecipes() {
-                if (!WEBAPP_URL) {
-                    addLog('錯誤: 未設置Web App URL', 'error');
-                    alert('請先設置Web App URL');
-                    document.querySelector('.tab[data-tab="setup"]').click();
+                if (USE_LOCAL_MODE) {
+                    loadRecipesFromLocalStorage();
                     return;
                 }
                 
@@ -1056,6 +1132,10 @@ function addRecipe(sheet, data) {
                                 <i class="fas fa-exclamation-circle"></i> 加載食譜失敗: ${data.message}
                             </div>
                         `;
+                        // 自動切換到本地模式
+                        USE_LOCAL_MODE = true;
+                        updateConnectionStatus();
+                        loadRecipesFromLocalStorage();
                     }
                 })
                 .catch(error => {
@@ -1063,10 +1143,46 @@ function addRecipe(sheet, data) {
                     addLog(`加載食譜失敗: ${error.message}`, 'error');
                     recipeList.innerHTML = `
                         <div class="alert error">
-                            <i class="fas fa-exclamation-circle"></i> 加載食譜失敗，請檢查Web App URL和網絡連接
+                            <i class="fas fa-exclamation-circle"></i> 加載食譜失敗，自動切換到本地模式
                         </div>
                     `;
+                    // 自動切換到本地模式
+                    USE_LOCAL_MODE = true;
+                    updateConnectionStatus();
+                    loadRecipesFromLocalStorage();
                 });
+            }
+            
+            // 從本地存儲加載食譜
+            function loadRecipesFromLocalStorage() {
+                addLog('從本地存儲加載食譜...');
+                
+                const recipeList = document.getElementById('recipe-list');
+                const storedRecipes = localStorage.getItem('recipes');
+                
+                if (!storedRecipes) {
+                    recipeList.innerHTML = `
+                        <div class="alert">
+                            <i class="fas fa-info-circle"></i> 尚未添加任何食譜，請使用上方表單新增您的第一個食譜。
+                        </div>
+                    `;
+                    document.getElementById('recipe-count').textContent = '0';
+                    return;
+                }
+                
+                try {
+                    const recipes = JSON.parse(storedRecipes);
+                    document.getElementById('recipe-count').textContent = recipes.length;
+                    displayRecipes(recipes);
+                    addLog(`從本地存儲加載了 ${recipes.length} 個食譜`, 'success');
+                } catch (e) {
+                    console.error('Error parsing recipes from localStorage', e);
+                    recipeList.innerHTML = `
+                        <div class="alert error">
+                            <i class="fas fa-exclamation-circle"></i> 解析食譜數據時出錯
+                        </div>
+                    `;
+                }
             }
             
             // 顯示食譜列表
@@ -1079,6 +1195,7 @@ function addRecipe(sheet, data) {
                             <i class="fas fa-info-circle"></i> 尚未添加任何食譜，請使用上方表單新增您的第一個食譜。
                         </div>
                     `;
+                    document.getElementById('recipe-count').textContent = '0';
                     return;
                 }
                 
@@ -1087,12 +1204,26 @@ function addRecipe(sheet, data) {
                 recipes.forEach((recipe, index) => {
                     let ingredientsHtml = '';
                     
-                    recipe.ingredients.forEach(ing => {
+                    // 處理舊格式的食材數據
+                    let ingredients = [];
+                    if (Array.isArray(recipe.ingredients)) {
+                        ingredients = recipe.ingredients;
+                    } else if (typeof recipe.ingredients === 'string') {
+                        // 嘗試解析舊格式
+                        try {
+                            ingredients = JSON.parse(recipe.ingredients);
+                        } catch (e) {
+                            // 如果解析失敗，使用空數組
+                            ingredients = [];
+                        }
+                    }
+                    
+                    ingredients.forEach(ing => {
                         ingredientsHtml += `
                             <tr>
-                                <td>${ing.name}</td>
-                                <td>${ing.weight}g</td>
-                                <td>${ing.percent}</td>
+                                <td>${ing.name || ''}</td>
+                                <td>${ing.weight || ''}g</td>
+                                <td>${ing.percent || ''}</td>
                                 <td>${ing.desc || '-'}</td>
                             </tr>
                         `;
@@ -1102,7 +1233,7 @@ function addRecipe(sheet, data) {
                         <div class="recipe-card">
                             <div class="recipe-header">
                                 <h3 class="recipe-title">${recipe.title}</h3>
-                                <span class="recipe-date">${new Date(recipe.timestamp).toLocaleDateString('zh-Hant')}</span>
+                                <span class="recipe-date">${recipe.date || ''}</span>
                             </div>
                             
                             <h4>食材</h4>
@@ -1122,12 +1253,36 @@ function addRecipe(sheet, data) {
                             
                             <h4>做法</h4>
                             <div class="steps">${recipe.steps}</div>
+                            
+                            <button onclick="deleteRecipe(${index})" class="secondary" style="margin-top: 15px;">
+                                <i class="fas fa-trash"></i> 刪除食譜
+                            </button>
                         </div>
                     `;
                 });
                 
                 container.innerHTML = html;
+                document.getElementById('recipe-count').textContent = recipes.length;
             }
+            
+            // 刪除食譜
+            window.deleteRecipe = function(index) {
+                if (confirm('確定要刪除此食譜嗎？')) {
+                    const storedRecipes = localStorage.getItem('recipes');
+                    if (storedRecipes) {
+                        try {
+                            const recipes = JSON.parse(storedRecipes);
+                            recipes.splice(index, 1);
+                            localStorage.setItem('recipes', JSON.stringify(recipes));
+                            addLog(`已刪除食譜: ${index}`, 'success');
+                            loadRecipesFromLocalStorage();
+                        } catch (e) {
+                            console.error('Error deleting recipe', e);
+                            addLog(`刪除食譜失敗: ${e.message}`, 'error');
+                        }
+                    }
+                }
+            };
             
             // 重置表單
             function resetForm() {
@@ -1153,11 +1308,38 @@ function addRecipe(sheet, data) {
             
             // 清除本地存儲
             function clearLocalStorage() {
-                if (confirm('確定要清除所有本地數據嗎？這將刪除保存的Web App URL。')) {
+                if (confirm('確定要清除所有本地數據嗎？這將刪除所有保存的食譜和設置。')) {
                     localStorage.clear();
                     addLog('本地存儲已清除', 'success');
                     alert('本地數據已清除');
                     location.reload();
+                }
+            }
+            
+            // 導出數據
+            function exportData() {
+                const storedRecipes = localStorage.getItem('recipes');
+                if (!storedRecipes) {
+                    alert('沒有數據可導出');
+                    return;
+                }
+                
+                try {
+                    const recipes = JSON.parse(storedRecipes);
+                    const dataStr = JSON.stringify(recipes, null, 2);
+                    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                    
+                    const exportFileDefaultName = 'recipes.json';
+                    
+                    const linkElement = document.createElement('a');
+                    linkElement.setAttribute('href', dataUri);
+                    linkElement.setAttribute('download', exportFileDefaultName);
+                    linkElement.click();
+                    
+                    addLog('數據已導出', 'success');
+                } catch (e) {
+                    console.error('Error exporting data', e);
+                    addLog(`導出數據失敗: ${e.message}`, 'error');
                 }
             }
             
@@ -1173,3 +1355,46 @@ function addRecipe(sheet, data) {
     </script>
 </body>
 </html>
+```
+
+使用說明
+
+第一步：診斷連接問題
+
+1. 打開"修復連接問題"選項卡
+2. 點擊"測試URL有效性"按鈕檢查當前URL是否有效
+3. 根據測試結果採取相應措施
+
+第二步：解決方案
+
+如果URL測試失敗，請嘗試以下解決方案：
+
+1. 重新部署Apps Script：
+   · 打開您的Google Apps Script項目
+   · 點擊"部署" > "新增部署"
+   · 選擇"網頁應用程式"
+   · 設置執行身份為"我"，權限為"任何人"
+   · 點擊"部署"並複製新的URL
+   · 將新URL貼到"新的Web App URL"輸入框中
+   · 點擊"保存新URL"按鈕
+2. 檢查Google Sheets權限：
+   · 確保您的Google Sheets文件已設置為"任何人擁有連結者均可編輯"
+   · 點擊"打開Google Sheets"按鈕檢查權限設置
+3. 使用本地模式：
+   · 如果無法立即解決Google Sheets連接問題
+   · 點擊"啟用本地模式"按鈕暫時使用本地存儲
+   · 食譜將保存在瀏覽器中，直到連接問題解決
+
+第三步：數據管理
+
+1. 導出數據：點擊"導出數據"按鈕備份您的食譜
+2. 查看本地數據：在"除錯資訊"選項卡中點擊"查看本地數據"
+3. 清除數據：如果需要，可以點擊"清除所有數據"按鈕重置系統
+
+注意事項
+
+1. 本地模式下的數據僅保存在當前瀏覽器中，清除瀏覽器數據會導致食譜丢失
+2. 建議定期導出數據備份
+3. 解決Google Sheets連接問題後，您可以手動將本地數據導入到Google Sheets中
+
+這個增強版本提供了完整的連接問題診斷和解決方案，讓您即使在Google Sheets連接失敗的情況下也能繼續使用食譜管理系統。
