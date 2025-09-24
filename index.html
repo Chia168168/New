@@ -590,7 +590,7 @@
           <div style="text-align:right;color:var(--gray);font-weight:800"><div>總重量：${totalWeight.toFixed(1)} g</div><div>含水率：${hydration}%</div></div>
         </div>
         <table style="width:100%;margin-top:8px;border-collapse:collapse;font-size:0.95rem">
-          <thead><tr style="background:var(--primary);color:white"><th style="padding:8px;text-align:left">食材</th><th style="padding:8px;text-align:left">重量</th><th style="padding:8px;text-align:left">%</th><th style="padding:8px;text-align:left">說明</th></tr></thead>
+          <thead><tr style="background:var(--primary);color:white"><th class="checkbox-cell"></th><th style="padding:8px;text-align:left">食材</th><th style="padding:8px;text-align:left">重量</th><th style="padding:8px;text-align:left">%</th><th style="padding:8px;text-align:left">說明</th></tr></thead>
           <tbody>${ingredientsHtml}</tbody>
         </table>
         <div style="margin-top:8px;background:#fbfdff;padding:8px;border-radius:8px"><strong>步驟：</strong><div style="margin-top:6px; white-space:pre-wrap">${escapeHtml(recipe.steps||'-')}</div></div>
