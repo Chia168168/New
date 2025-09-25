@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TENG 食譜管理系統 v3.1 — 單機離線完整版</title>
+  <title>TENG 食譜管理系統 v3.1 — 單機離線完整版 (計時器增強版)</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root{
@@ -27,7 +27,7 @@
     .col{flex:1}
     .checkbox-cell { width: 50px; text-align: center;}
 	input[type="checkbox"] { accent-color: red; }
-    .btn{display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; color:white; font-weight:700;}
+    .btn{display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; color:white; font-weight:700; transition: background-color 0.2s ease, color 0.2s ease;}
     .btn-sm{padding:6px 8px; font-size:0.9rem}
     .btn-primary{background:var(--primary)} .btn-success{background:var(--success)} .btn-danger{background:var(--danger)} .btn-info{background:var(--info)} .btn-ghost{background:transparent;color:var(--gray);border:1px solid #eee}
     .ingredient-grid{display:grid; grid-template-columns: 1fr 1.6fr 1fr 1fr 1fr auto; gap:8px; align-items:center; padding:8px; background:#fbfdff;border-radius:8px; margin-bottom:8px; border:1px solid #f0f6fb;}
@@ -79,7 +79,6 @@
       <div class="tab" data-tab="settings">設定（自訂食材）</div>
     </div>
 
-    <!-- Manage -->
     <div class="card" id="manageTab">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <div style="font-weight:800; color:var(--primary)"><i class="fas fa-edit"></i> 新增 / 編輯食譜</div>
@@ -123,7 +122,6 @@
       </div>
     </div>
 
-    <!-- Browse -->
     <div class="card" id="browseTab" style="display:none">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <div style="font-weight:800; color:var(--primary)"><i class="fas fa-book"></i> 食譜列表</div>
@@ -147,7 +145,6 @@
       <div id="recipes-list" style="margin-top:12px"></div>
     </div>
 
-    <!-- Stats -->
     <div class="card" id="statsTab" style="display:none">
       <div style="font-weight:800; color:var(--primary)"><i class="fas fa-chart-pie"></i> 統計</div>
       <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-top:12px;">
@@ -158,7 +155,6 @@
       </div>
     </div>
 
-    <!-- Settings -->
     <div class="card" id="settingsTab" style="display:none">
       <div style="font-weight:800;color:var(--primary)"><i class="fas fa-cog"></i> 自訂食材資料庫</div>
       <div style="margin-top:8px; display:grid; grid-template-columns:1fr 1fr auto; gap:8px;">
@@ -172,7 +168,6 @@
     <footer><small>TENG 食譜管理系統 v3.1（單機版） — 存於 localStorage</small></footer>
   </div>
 
-  <!-- Conversion Modal -->
   <div id="conversionModal" style="display:none; position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.45); align-items:center; justify-content:center; z-index:2000;">
     <div style="width:96%; max-width:920px; background:white; border-radius:10px; overflow:auto; max-height:90vh;">
       <div style="padding:12px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; display:flex; justify-content:space-between; align-items:center;">
@@ -203,7 +198,6 @@
     </div>
   </div>
 
-  <!-- xlsx lib -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <script>
@@ -229,7 +223,125 @@
   let conversionResults = null;
   let currentConversionRecipe = null;
 
+  // --- [新功能] 計時器管理 ---
+  const activeTimers = {}; // { id: { timeoutId, intervalId } }
+  let audioCtx; // Web Audio API context
+  let wakeLock = null; // <--- 新增這一行
+
   const STORAGE_KEY = 'teng_recipes_offline_v1';
+
+  /* ---------- [新功能] Audio Beep ---------- */
+  function playBeep(type='start') {
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch(e) { console.warn('Web Audio API is not supported.'); return; }
+    }
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    gainNode.gain.value = 0.1; // 降低音量避免刺耳
+    if (type === 'start') {
+      oscillator.frequency.value = 440; // A4
+      oscillator.type = 'sine';
+    } else { // 'end'
+      oscillator.frequency.value = 880; // A5
+      oscillator.type = 'triangle';
+    }
+    oscillator.start(audioCtx.currentTime);
+    oscillator.stop(audioCtx.currentTime + 0.2);
+  }
+
+/* ---------- [新功能] Timer Handler (修正版) ---------- */
+  function handleTimerClick(button) {
+    const timerId = button.dataset.id;
+    const duration = parseInt(button.dataset.duration, 10); // in seconds
+    const recipeName = timerId.split('-step-')[0];
+
+    if (activeTimers[timerId]) {
+      // 計時器正在運行，取消它
+      clearTimeout(activeTimers[timerId].timeoutId);
+      clearInterval(activeTimers[timerId].intervalId);
+      delete activeTimers[timerId];
+      button.innerHTML = `<i class="fas fa-hourglass-start"></i> ${duration / 60} 分鐘`;
+      button.classList.remove('btn-danger');
+      button.classList.add('btn-info');
+
+      // 如果沒有任何計時器在跑了，就釋放鎖
+      if (Object.keys(activeTimers).length === 0) {
+        releaseWakeLock();
+      }
+    } else {
+      // 計時器未運行，啟動它
+
+      // 如果這是第一個啟動的計時器，就請求鎖
+      if (Object.keys(activeTimers).length === 0) {
+        requestWakeLock();
+      }
+      
+      playBeep('start');
+      const endTime = Date.now() + duration * 1000;
+
+      const updateButtonText = () => {
+        const remaining = Math.round((endTime - Date.now()) / 1000);
+        if (remaining <= 0) {
+          clearInterval(intervalId);
+        } else {
+          const minutes = Math.floor(remaining / 60);
+          const seconds = remaining % 60;
+          button.innerHTML = `<i class="fas fa-stop-circle"></i> 取消 (${minutes}:${seconds.toString().padStart(2, '0')})`;
+        }
+      };
+
+      const intervalId = setInterval(updateButtonText, 1000);
+      button.classList.remove('btn-info');
+      button.classList.add('btn-danger');
+      updateButtonText(); // 立即更新一次
+
+      const timeoutId = setTimeout(() => {
+        playBeep('end');
+        showNotification(`「${recipeName}」的步驟計時已完成！`, 'success');
+        const statusEl = document.getElementById(`status-${timerId}`);
+        if (statusEl) statusEl.textContent = '[已完成]';
+        button.remove(); // 完成後移除按鈕
+        clearInterval(intervalId);
+        delete activeTimers[timerId];
+        
+        // 如果沒有任何計時器在跑了，就釋放鎖
+        if (Object.keys(activeTimers).length === 0) {
+          releaseWakeLock();
+        }
+      }, duration * 1000);
+
+      activeTimers[timerId] = { timeoutId, intervalId };
+    }
+  }
+
+/* ---------- [新功能] Wake Lock (螢幕喚醒鎖) ---------- */
+async function requestWakeLock() {
+  if ('wakeLock' in navigator) {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      showNotification('計時中，螢幕將保持喚醒', 'info');
+
+      // 監聽當鎖被釋放時的情況 (例如切換分頁)
+      wakeLock.addEventListener('release', () => {
+        wakeLock = null;
+        console.log('螢幕喚醒鎖已釋放');
+      });
+      console.log('螢幕喚醒鎖已啟動');
+    } catch (err) {
+      console.error(`${err.name}, ${err.message}`);
+    }
+  }
+}
+
+function releaseWakeLock() {
+  if (wakeLock !== null) {
+    wakeLock.release();
+    wakeLock = null;
+  }
+}
 
   /* ---------- notification ---------- */
   function showNotification(message, type='success') {
@@ -596,6 +708,38 @@ if(store){
     updateRecipeFilter(allRecipes);
   }
 
+  // --- [新功能] 渲染步驟並加上計時器 ---
+  function renderStepsWithTimers(recipeTitle, steps) {
+    if (!steps) return '-';
+    const lines = escapeHtml(steps).split('\n');
+    const timeRegex = /(\d+)\s*(分|分鐘)/;
+
+    return lines.map((line, index) => {
+      const match = line.match(timeRegex);
+      if (match) {
+        const minutes = parseInt(match[1], 10);
+        const durationSeconds = minutes * 60;
+        const timerId = `${recipeTitle}-step-${index}`;
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; min-height:30px; margin-bottom:4px;">
+            <span>${line}</span>
+            <span style="display:inline-flex; align-items:center; gap:8px; flex-shrink:0; margin-left:12px;">
+              <span id="status-${timerId}" style="color:var(--success); font-weight:bold;"></span>
+              <button class="btn btn-info btn-sm"
+                      data-id="${escapeHtml(timerId)}"
+                      data-duration="${durationSeconds}"
+                      onclick="handleTimerClick(this)">
+                <i class="fas fa-hourglass-start"></i> ${minutes} 分鐘
+              </button>
+            </span>
+          </div>
+        `;
+      } else {
+        return `<div>${line}</div>`;
+      }
+    }).join('');
+  }
+
   function renderRecipes(recipes){
     const container = document.getElementById('recipes-list');
     container.innerHTML = '';
@@ -636,7 +780,9 @@ if(store){
           <thead><tr style="background:var(--primary);color:white"><th class="checkbox-cell"></th><th style="padding:8px;text-align:left">食材</th><th style="padding:8px;text-align:left">重量</th><th style="padding:8px;text-align:left">%</th><th style="padding:8px;text-align:left">說明</th></tr></thead>
           <tbody>${ingredientsHtml}</tbody>
         </table>
-        <div style="margin-top:8px;background:#fbfdff;padding:8px;border-radius:8px"><strong>步驟：</strong><div style="margin-top:6px; white-space:pre-wrap">${escapeHtml(recipe.steps||'-')}</div></div>
+        <div style="margin-top:8px;background:#fbfdff;padding:8px;border-radius:8px"><strong>步驟：</strong>
+          <div style="margin-top:6px;">${renderStepsWithTimers(recipe.title, recipe.steps)}</div>
+        </div>
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
           <button class="btn btn-primary btn-sm" data-action="convert" data-title="${escapeHtml(recipe.title)}"><i class="fas fa-calculator"></i> 換算</button>
           <button class="btn btn-primary btn-sm" data-action="edit" data-title="${escapeHtml(recipe.title)}"><i class="fas fa-edit"></i> 編輯</button>
